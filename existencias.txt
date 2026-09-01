@@ -1,0 +1,205 @@
+# Modelos que aparecen impresos en las hojas de inventario de Rústicos.
+# Regla de Alek (2026-08-29): si el renglón está en la hoja, se maneja en
+# existencia -> 5 a 7 días. Lo que no está -> 15 a 25 días.
+# Transcrito de las 8 fotos (son 4 hojas, cada una fotografiada 2 veces).
+
+[AZULEJO_COLOR]           # hoja A, "Azulejos" y "Tonos Mates"
+Amarillo Deslavado
+Amarillo Liso
+Arena
+Azul Colonial
+Azul Deslavado
+Azul Especial
+Azul Intermedio
+Blanco Mexicano
+Blanco Puro
+Chocolate
+Gris Deslavado
+Jade
+Lavanda
+Lila Deslavado
+Naranja Deslavado
+Negro
+Oro Viejo
+Rojo Brillante
+Rojo Deslavado
+Rosa Carmin
+Terracota Deslavado
+Terracota Liso
+Turquesa Deslavado
+Verde Deslavado
+Verde Especial
+Verde Intermedio
+Vino
+Canela Mate
+Chocolate Mate
+Jade Mate
+Mamey Mate
+Mango Mate
+Negro Mate
+Nuez Mate
+
+[RELIEVE]                 # hoja B, "Relieve Tradicional" y "Relieve Mate"
+Alcatraz Azul
+Amapola Especial Azul
+Animales
+Bouquet
+Catrinas
+Cenefa Morelos
+Citlali
+Cuerda
+Cuetzalan
+Cupula Azul
+Cupula Blanco
+Flor Arabe
+Frida
+Frutas
+Girasol 2H Azul
+Girasol Terracota
+Guadalajara
+Hacienda Az Tc
+Indito Mostaza
+Julieta
+Lace Azul
+Lagartija Az Fdo Most
+Lluvia Mostaza
+Lluvia Rojo
+Lluvia Turquesa
+Luna Azul
+Pez Colorin
+Queretaro Az Tc
+Queretaro Azul
+Rosa de Los Vientos
+Rosario Azul
+Rosario Colores
+Rosario Verde
+Seville
+Taboada
+Taboada II
+Yesenia
+Zacatecas Blanco
+Zacatecas Terracota
+P 08 Lila Azul
+Cenefa Mate Choc Bco Mex
+Cenefa Mate Nuez Choco
+Iris
+Lace Madera
+P 10
+P 19
+P 24
+Teresa
+Trebol
+Rosario Negro
+
+[DECORADO]                # hoja A "Especiales"/"Decorados" + hoja D "Azulejo 5x5"
+Alcatraz Azul
+Alcatraz Terracota
+Alcatraz Verde
+Amapola Lila
+Amapola Mostaza
+Anita Azul
+Arlequin Azul
+Arlequin Verde
+Barroco Azul
+Bouquet
+Cintya
+Collage Azul
+Corina
+Coyote
+Cuerda
+Cupula Azul
+Damasco Azul
+Desierto
+Eclipse
+Flor Arabe
+Fly Azul
+Frutas
+Girasol 2H Azul
+Girasol 2H Blanco Mexicano
+Girasol 2H Terracota
+Girasol 2H Verde
+Girasol 4H Azul
+Girasol 4H Terracota
+Girasol Azul
+Girasol Blanco
+Girasol Terracota
+Greca Az Tc
+Greca Azul
+Guadalajara
+Guia OH Most Flip Verde
+Gusano Tc
+Hacienda Az Tc
+Indito Fondo Blanco
+Indito Fondo Mostaza
+Jade
+Lace Azul
+Lace Tc Az
+Lagartija Amarilla Fondo Azul
+Lagartija Azul Fondo Mostaza
+Lluvia Mostaza
+Lluvia Rojo
+Lluvia Terracota
+Lluvia Turquesa
+Luna
+Madrid Azul
+Primavera 1
+Rosario Azul
+Rosario Colores
+Rosario Negro
+Seville
+Sol Picos
+Sol Puntos
+Taboada
+Yesenia
+
+[TERMINACION]             # hoja C, "Terminaciones" y "Terminaciones Especiales"
+Angulo Azul Deslavado
+Angulo Azul Intermedio
+Angulo Blanco Mexicano
+Angulo Naranja Deslavado
+Angulo Terracota Deslavado
+Angulo Terracota Liso
+Bagueta Azul Intermedio
+Bagueta Azul Especial
+Bagueta Amarillo Deslavado
+Bagueta Azul Deslavado
+Bagueta Blanco Mexicano
+Bagueta Blanco Puro
+Bagueta Chocolate
+Bagueta Lavanda
+Bagueta Mezclilla Deslavado
+Bagueta Naranja Brillante
+Bagueta Negro
+Bagueta Oro Viejo
+Bagueta Terracota Deslavado
+Bagueta Terracota Liso
+Bagueta Turquesa Deslavado
+Bagueta Verde Bambu Mate
+Bagueta Verde Deslavado
+Bagueta Verde Especial
+Remate Amarillo Deslavado
+Remate Azul Deslavado
+Remate Azul Intermedio
+Remate Blanco Mexicano
+Remate Lavanda
+Remate Rojo Brillante
+Remate Terracota Deslavado
+Remate Terracota Liso
+Remate Verde Deslavado
+Uña Amarillo Deslavado
+Uña Azul Deslavado
+Uña Azul Intermedio
+Uña Blanco Mexicano
+Uña Blanco Puro
+Uña Mezclilla
+Uña Negro
+Uña Terracota Deslavado
+Uña Verde Deslavado
+Lapiz Verde Deslavado
+Lapiz Nuez
+Lapiz Terracota Deslavado
+Listelo Negro
+Pecho Paloma Azul Deslavado
+Pecho Paloma Azul Intermedio
+Trenza Amarillo Deslavado
+Trenza Azul Intermedio

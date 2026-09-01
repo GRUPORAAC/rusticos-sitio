@@ -1,0 +1,24 @@
+{
+  "_orden": ["Blanco", "Amarillo", "Naranja", "Rojo", "Rosa", "Morado", "Azul", "Verde", "Café", "Gris", "Negro", "Multicolor"],
+  "_tono": {
+    "Blanco": "#F4EEE0", "Amarillo": "#F2B705", "Naranja": "#E2552C", "Rojo": "#C0272D",
+    "Rosa": "#D96A8B", "Morado": "#8C6BB1", "Azul": "#2B4C9B", "Verde": "#3E7D3A",
+    "Café": "#A9642E", "Gris": "#BFC3C4", "Negro": "#1C1C1C",
+    "Multicolor": "linear-gradient(135deg,#F2B705 0%,#E2552C 35%,#2B4C9B 70%,#3E7D3A 100%)"
+  },
+  "Amarillo": "Amarillo", "Amarillo Ceramico": "Amarillo", "Mostaza": "Amarillo",
+  "Miel": "Amarillo", "Oro Viejo": "Amarillo",
+  "Arena": "Blanco", "Blanco": "Blanco", "Blanco Mexicano": "Blanco", "Blanco Puro": "Blanco",
+  "Naranja": "Naranja", "Terracota": "Naranja", "Caramelo": "Naranja",
+  "Rojo": "Rojo", "Vino": "Rojo",
+  "Rosa": "Rosa", "Rosa Carmin": "Rosa", "Palo de Rosa": "Rosa",
+  "Lila": "Morado", "Lavanda": "Morado",
+  "Azul": "Azul", "Azul Cobalto": "Azul", "Azul Colonial": "Azul", "Azul Intermedio": "Azul",
+  "Azul Turquesa": "Azul", "Turquesa": "Azul", "Mezclilla": "Azul",
+  "Verde": "Verde", "Verde Antiguo": "Verde", "Verde Bambu": "Verde", "Verde Lima": "Verde",
+  "Verde Manzano": "Verde", "Jade": "Verde",
+  "Canela": "Café", "Chocolate": "Café", "Nuez": "Café",
+  "Gris Claro": "Gris", "Gris Oxford": "Gris",
+  "Negro": "Negro",
+  "Colores": "Multicolor"
+}

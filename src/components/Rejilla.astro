@@ -1,0 +1,16 @@
+---
+import Tarjeta from './Tarjeta.astro';
+const { items } = Astro.props;
+---
+<div class="rejilla">
+  {items.map((p) => <Tarjeta p={p} />)}
+</div>
+<style>
+  .rejilla {
+    display: grid; gap: 26px 20px;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  }
+  @media (max-width: 520px) {
+    .rejilla { grid-template-columns: repeat(2, 1fr); gap: 18px 12px; }
+  }
+</style>

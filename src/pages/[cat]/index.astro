@@ -1,0 +1,69 @@
+---
+import Base from '../../layouts/Base.astro';
+import Rejilla from '../../components/Rejilla.astro';
+import { ARBOL, porCat, porSub } from '../../lib/catalogo.js';
+import Colores from '../../components/Colores.astro';
+import FAMS from '../../data/familias.json';
+
+
+export function getStaticPaths() {
+  return ARBOL.map((c) => ({ params: { cat: c.slug }, props: { c } }));
+}
+const { c } = Astro.props;
+const items = porCat(c.slug);
+const subs = c.subs.map((s) => ({ ...s, items: porSub(c.slug, s.slug) })).filter((s) => s.items.length);
+const unaSola = subs.length === 1;
+---
+<Base titulo={c.nombre} descripcion={c.lema}>
+  <div class="contenedor">
+    <p class="miga"><a href="/">Inicio</a> · {c.nombre}</p>
+    <header class="cab">
+      <h1>{c.nombre}</h1>
+      <p>{c.lema} <b>{items.length} productos.</b></p>
+    </header>
+
+    <Colores items={items} />
+
+    {!unaSola && (
+      <nav class="subs">
+        {subs.map((s) => <a href={`/${c.slug}/${s.slug}/`}>{s.nombre} <span>{s.items.length}</span></a>)}
+      </nav>
+    )}
+
+    {subs.map((s) => (
+      <section class="bloque">
+        {!unaSola && (
+          <h2 class="sub-t">
+            <a href={`/${c.slug}/${s.slug}/`}>{s.nombre}</a>
+            <a class="ver" href={`/${c.slug}/${s.slug}/`}>Ver los {s.items.length} →</a>
+          </h2>
+        )}
+        <Rejilla items={s.items.slice(0, 12)} />
+      </section>
+    ))}
+  </div>
+
+  <script define:vars={{ mapa: Object.fromEntries(items.map((p) => [p.url, p.colores])), fams: FAMS }}>
+    import('/filtro.js').then((m) => m.montarFiltro(mapa, fams));
+  </script>
+
+  <style>
+    .cab { padding: 18px 0 30px; }
+    .cab h1 { font-size: clamp(30px, 4.5vw, 46px); font-weight: 700; }
+    .cab p { margin: 10px 0 0; color: var(--tenue); font-size: 16px; }
+    .cab b { color: var(--carbon); font-weight: 600; }
+    .subs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 40px; }
+    .subs a {
+      padding: 8px 16px; border: 1px solid var(--linea); border-radius: 999px;
+      font-size: 14px; font-weight: 500; background: #fff;
+    }
+    .subs a:hover { border-color: var(--indigo); color: var(--indigo); }
+    .subs span { color: var(--tenue); font-size: 12px; }
+    .bloque { margin-bottom: 56px; }
+    .sub-t {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 16px; margin-bottom: 18px; font-size: 20px; font-weight: 600;
+    }
+    .ver { font-size: 13px; font-weight: 500; color: var(--indigo); white-space: nowrap; }
+  </style>
+</Base>

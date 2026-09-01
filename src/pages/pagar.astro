@@ -1,0 +1,258 @@
+---
+import Base from '../layouts/Base.astro';
+import { TARIFAS } from '../lib/envio.js';
+---
+<Base titulo="Finalizar compra">
+  <div class="contenedor pago">
+    <h1>Finalizar compra</h1>
+
+    <p id="sin-carrito" class="vacio" hidden>Tu carrito está vacío. <a href="/">Ver el catálogo →</a></p>
+
+    <form id="form" class="rejilla" hidden>
+      <section class="datos">
+        <h2>¿A dónde lo enviamos?</h2>
+
+        <label>Nombre completo
+          <input name="nombre" required autocomplete="name" />
+        </label>
+        <div class="par">
+          <label>Correo
+            <input name="correo" type="email" required autocomplete="email" />
+          </label>
+          <label>Teléfono
+            <input name="telefono" type="tel" required autocomplete="tel" inputmode="tel" />
+          </label>
+        </div>
+        <label>Calle y número
+          <input name="calle" required autocomplete="street-address" />
+        </label>
+        <div class="par">
+          <label>Colonia
+            <input name="colonia" required />
+          </label>
+          <label>Código postal
+            <input name="cp" required inputmode="numeric" maxlength="5" pattern="\d{5}" autocomplete="postal-code" />
+          </label>
+        </div>
+        <label>Referencias para la entrega <span class="op">(opcional)</span>
+          <textarea name="referencias" rows="2" placeholder="Entre qué calles, color de fachada, horario en que hay quien reciba…"></textarea>
+        </label>
+
+        <div id="zona" class="zona" hidden></div>
+
+        <label class="acepto">
+          <input type="checkbox" name="acepto" required />
+          <span>Entiendo que es un <b>producto artesanal</b>: el color y la medida pueden variar hasta <b>5%</b>, y debo considerar hasta <b>5% de merma</b> por traslados y cortes. Acepto los <a href="/terminos/" target="_blank">términos y condiciones</a>.</span>
+        </label>
+      </section>
+
+      <aside class="resumen">
+        <h2>Tu pedido</h2>
+        <div id="lineas"></div>
+        <div class="fila"><span>Productos</span><b id="sub">$0</b></div>
+        <div class="fila"><span>Envío</span><b id="env">—</b></div>
+        <div class="fila total"><span>Total</span><b id="tot">$0</b></div>
+        <p id="plazo" class="plazo"></p>
+
+        <div id="metodos">
+          <button type="button" id="mp" class="btn mp" disabled>Pagar con Mercado Pago</button>
+          <p class="mini">Tarjetas, meses sin intereses y efectivo en OXXO.</p>
+          <div id="paypal-boton"></div>
+          <p id="aviso-config" class="aviso-config" hidden></p>
+        </div>
+
+        <a id="wa" class="btn wa2" target="_blank" rel="noopener" hidden>Cotizar el envío por WhatsApp</a>
+      </aside>
+    </form>
+  </div>
+
+  <script is:inline define:vars={{ TARIFAS }}>
+    const ALTA = [['Nezahualcóyotl',57000,57999],['Naucalpan de Juárez',53000,53999],['La Paz (Los Reyes)',56400,56529],
+      ['Huixquilucan',52760,52799],['Tlalnepantla de Baz',54000,54199],['Valle de Chalco',56610,56619],
+      ['Chimalhuacán',56330,56369],['Atizapán de Zaragoza',52900,52999],['Chicoloapan',56370,56399],
+      ['Chalco',56600,56609],['Chalco',56620,56649],['Ixtapaluca',56530,56599],['Ecatepec de Morelos',55000,55599],
+      ['Coacalco de Berriozábal',55700,55739],['Tultitlán',54900,54999],['Texcoco',56100,56269],
+      ['Cuautitlán Izcalli',54700,54769]];
+
+    function zonaDe(cp) {
+      const n = parseInt(String(cp).trim(), 10);
+      if (!/^\d{5}$/.test(String(cp).trim())) return { zona: '', lugar: '', costo: null };
+      if (n >= 1000 && n <= 16999) return { zona: 'normal', lugar: 'Ciudad de México', costo: TARIFAS.normal };
+      for (const [lugar, a, b] of ALTA) if (n >= a && n <= b) return { zona: 'alta', lugar, costo: TARIFAS.alta };
+      return { zona: 'fuera', lugar: '', costo: null };
+    }
+
+    const pesos = (n) => '$' + Number(n).toLocaleString('es-MX', { maximumFractionDigits: 0 });
+    const f = document.getElementById('form');
+    const carrito = window.carrito.leer();
+    let envio = null, zona = null;
+
+    if (!carrito.length) {
+      document.getElementById('sin-carrito').hidden = false;
+    } else {
+      f.hidden = false;
+      document.getElementById('lineas').innerHTML = carrito
+        .map((x) => `<div class="linea"><span>${x.cant} ${x.unidad} · ${x.nombre} ${x.formato}</span><b>${pesos(x.cant * x.precio)}</b></div>`)
+        .join('');
+      pintarTotales();
+    }
+
+    function pintarTotales() {
+      const sub = window.carrito.total();
+      document.getElementById('sub').textContent = pesos(sub);
+      document.getElementById('env').textContent = envio === null ? '—' : pesos(envio);
+      document.getElementById('tot').textContent = pesos(sub + (envio || 0));
+      const lento = carrito.some((x) => (x.plazo || '').startsWith('15'));
+      document.getElementById('plazo').textContent = lento
+        ? 'Entrega: 15 a 25 días hábiles (tu pedido incluye piezas con plazo extendido).'
+        : 'Entrega: 5 a 7 días hábiles.';
+      document.getElementById('mp').disabled = envio === null || !metodos.mercadopago;
+      const texto = 'Hola, quiero este pedido:\n\n' +
+        carrito.map((x) => `• ${x.cant} ${x.unidad} — ${x.nombre} ${x.formato} (${x.codigo})`).join('\n') +
+        `\n\nProductos: ${pesos(sub)}`;
+      document.getElementById('wa').href = 'https://wa.me/525554147383?text=' + encodeURIComponent(texto);
+    }
+
+    f.cp.addEventListener('input', () => {
+      const z = zonaDe(f.cp.value);
+      const caja = document.getElementById('zona');
+      zona = z.zona;
+      if (!z.zona) { caja.hidden = true; envio = null; document.getElementById('wa').hidden = true; return pintarTotales(); }
+      caja.hidden = false;
+      // ponytail: el boton de WhatsApp solo aparece cuando el CP queda fuera
+      // del rango de entrega (Alek 2026-08-29). Dentro del rango se paga en linea.
+      document.getElementById('wa').hidden = z.zona !== 'fuera';
+      if (z.zona === 'fuera') {
+        envio = null;
+        caja.className = 'zona fuera';
+        caja.innerHTML = '<b>Ese código postal está fuera de nuestra zona de entrega automática.</b> Te entregamos igual, pero el envío se cotiza según destino y volumen. Escríbenos por WhatsApp y te pasamos el costo.';
+      } else {
+        envio = z.costo;
+        caja.className = 'zona ok';
+        caja.innerHTML = `<b>${z.lugar}</b> · Envío ${pesos(z.costo)}`;
+      }
+      pintarTotales();
+    });
+
+    // Que metodos estan configurados en el servidor
+    let metodos = { mercadopago: false, paypal: null };
+    fetch('/api/config')
+      .then((r) => r.json())
+      .then((m) => {
+        metodos = m;
+        const av = document.getElementById('aviso-config');
+        if (!m.mercadopago && !m.paypal) {
+          av.hidden = false;
+          av.textContent = 'El pago en línea todavía no está activado. Cierra tu pedido por WhatsApp mientras tanto.';
+          document.getElementById('wa').hidden = false;  // ponytail: sin pasarela, unica salida
+        }
+        if (m.paypal) cargarPaypal(m.paypal);
+        pintarTotales();
+      })
+      .catch(() => {});
+
+    // Un solo lugar arma el pedido que va al servidor. Los precios que manda
+    // el navegador son informativos: el servidor los relee del catalogo.
+    function datosPedido() {
+      return {
+        items: carrito, zona,
+        nombre: f.nombre.value, correo: f.correo.value, telefono: f.telefono.value,
+        direccion: `${f.calle.value}, ${f.colonia.value}. ${f.referencias.value}`, cp: f.cp.value,
+      };
+    }
+
+    document.getElementById('mp').onclick = async () => {
+      if (!f.reportValidity()) return;
+      const b = document.getElementById('mp');
+      b.disabled = true; b.textContent = 'Preparando el pago…';
+      const r = await fetch('/api/mercadopago', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datosPedido()),
+      });
+      const d = await r.json();
+      if (d.url) { location.href = d.url; return; }
+      b.disabled = false; b.textContent = 'Pagar con Mercado Pago';
+      const av = document.getElementById('aviso-config');
+      av.hidden = false;
+      av.textContent = 'No se pudo iniciar el pago. Inténtalo de nuevo o cierra el pedido por WhatsApp.';
+    };
+
+    function cargarPaypal(clientId) {
+      const s = document.createElement('script');
+      s.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=MXN`;
+      s.onload = () => {
+        window.paypal.Buttons({
+          onClick: () => f.reportValidity() && envio !== null,
+          // el TOTAL lo calcula el servidor con los precios del catalogo
+          createOrder: () =>
+            fetch('/api/paypal', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ accion: 'crear', pedido: datosPedido() }),
+            })
+              .then((r) => r.json())
+              .then((d) => { if (!d.id) throw new Error(d.error || 'no_se_creo'); return d.id; }),
+          // y el servidor confirma con PayPal que el dinero entro
+          onApprove: (d) =>
+            fetch('/api/paypal', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ accion: 'capturar', orderID: d.orderID }),
+            })
+              .then((r) => r.json())
+              .then((res) => {
+                if (!res.ok) throw new Error(res.error || 'no_confirmado');
+                window.carrito.vaciar();
+                location.href = '/gracias/';
+              }),
+          onError: () => {
+            const av = document.getElementById('aviso-config');
+            av.hidden = false;
+            av.textContent = 'No se pudo completar el pago con PayPal. Inténtalo de nuevo.';
+          },
+        }).render('#paypal-boton');
+      };
+      document.head.appendChild(s);
+    }
+  </script>
+
+  <style>
+    .pago { padding-top: 34px; }
+    .pago h1 { font-size: clamp(28px, 4vw, 40px); margin-bottom: 28px; }
+    .rejilla { display: grid; grid-template-columns: 1.3fr 1fr; gap: 44px; align-items: start; }
+    @media (max-width: 880px) { .rejilla { grid-template-columns: 1fr; gap: 28px; } }
+    h2 { font-size: 18px; margin-bottom: 18px; }
+    label { display: block; margin-bottom: 14px; font-size: 13px; font-weight: 600; }
+    .op { font-weight: 400; color: var(--tenue); }
+    input, textarea {
+      display: block; width: 100%; margin-top: 5px; padding: 11px 13px;
+      border: 1px solid var(--linea); border-radius: var(--radio);
+      font: inherit; font-size: 15px; font-weight: 400; background: #fff; color: var(--carbon);
+    }
+    input:focus, textarea:focus { outline: 2px solid var(--indigo); outline-offset: -1px; }
+    .par { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .zona { padding: 12px 14px; border-radius: var(--radio); font-size: 13px; margin-bottom: 16px; }
+    .zona.ok { background: #eef6ec; border: 1px solid #cfe3ca; }
+    .zona.fuera { background: #fdf0ec; border: 1px solid #f6d3c8; }
+    .acepto { display: flex; gap: 10px; font-weight: 400; font-size: 13px; color: var(--tenue); line-height: 1.5; }
+    .acepto input { width: auto; margin: 3px 0 0; flex: 0 0 auto; }
+    .acepto b { color: var(--carbon); }
+    .acepto a { color: var(--indigo); text-decoration: underline; }
+
+    .resumen { border: 1px solid var(--linea); border-radius: var(--radio); background: #fff; padding: 22px; position: sticky; top: 100px; }
+    .linea { display: flex; justify-content: space-between; gap: 14px; font-size: 13px; padding: 6px 0; color: var(--tenue); }
+    .linea b { color: var(--carbon); white-space: nowrap; }
+    .fila { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; border-top: 1px solid var(--linea); }
+    .fila.total { font-size: 17px; }
+    .fila.total b { font-size: 22px; }
+    .plazo { font-size: 12px; color: var(--tenue); margin: 4px 0 18px; }
+    .btn { display: block; width: 100%; text-align: center; padding: 14px; border: 0; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; }
+    .mp { background: var(--indigo); color: #fff; }
+    .mp:disabled { background: #d8d5cd; cursor: not-allowed; }
+    .mini { font-size: 11px; color: var(--tenue); text-align: center; margin: 8px 0 14px; }
+    .aviso-config { font-size: 12px; color: var(--coral); text-align: center; margin: 10px 0; }
+    .wa2 { margin-top: 14px; border: 1px solid var(--linea); color: var(--tenue); font-size: 13px; }
+    .wa2:hover { border-color: var(--indigo); color: var(--indigo); }
+  </style>
+</Base>

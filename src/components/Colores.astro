@@ -1,0 +1,95 @@
+---
+import { COLORES } from '../lib/catalogo.js';
+import FAM from '../data/familias.json';
+const { items } = Astro.props;
+
+// Cuantos productos por color. Un bicolor cuenta en sus dos colores.
+const cuenta = {};
+for (const p of items) for (const c of p.colores) cuenta[c] = (cuenta[c] || 0) + 1;
+
+// Los tonos se agrupan en familias: un circulo "Azul" abre sus 7 tonalidades.
+const porFamilia = {};
+for (const c of Object.keys(cuenta)) {
+  const f = FAM[c] || 'Multicolor';
+  (porFamilia[f] ||= []).push(c);
+}
+const familias = FAM._orden
+  .filter((f) => porFamilia[f])
+  .map((f) => ({
+    nombre: f,
+    tono: FAM._tono[f],
+    tonos: porFamilia[f].sort((a, b) => a.localeCompare(b)),
+    n: porFamilia[f].reduce((s, c) => s + cuenta[c], 0),
+  }));
+
+// Si no hay color que distinga a estos productos, la barra no aporta nada.
+const mostrar = familias.length > 1 || (familias[0] && familias[0].tonos.length > 1);
+---
+{mostrar && (
+  <div class="filtro-color">
+    <div class="fila">
+      <button class="pastilla on" data-color="" data-fam="">Todos <span>{items.length}</span></button>
+      {familias.map((f) => (
+        <button class="gota" data-fam={f.nombre} title={`${f.nombre} · ${f.n}`} aria-label={`${f.nombre}, ${f.n} productos`}>
+          <span class="disco" style={`background:${f.tono}`}></span>
+        </button>
+      ))}
+      <button class="quitar" id="quitar-filtro" hidden>× Quitar filtro</button>
+    </div>
+
+    {familias.filter((f) => f.tonos.length > 1).map((f) => (
+      <div class="tonos" data-de={f.nombre} hidden>
+        <span class="et-tono">{f.nombre}:</span>
+        <button class="pastilla-tono on" data-color="" data-fam={f.nombre}>Todos</button>
+        {f.tonos.map((c) => (
+          <button class="gota chica" data-color={c} data-fam={f.nombre} title={`${c} · ${cuenta[c]}`} aria-label={c}>
+            <span class="disco" style={`background:${COLORES[c] || '#ccc'}`}></span>
+            <span class="etiq">{c}</span>
+          </button>
+        ))}
+      </div>
+    ))}
+  </div>
+)}
+
+<style>
+  .filtro-color { margin-bottom: 30px; }
+  .fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .pastilla {
+    padding: 8px 15px; border: 1px solid var(--linea); border-radius: 999px;
+    background: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--carbon);
+  }
+  .quitar {
+    order: 99; margin-left: auto; padding: 8px 15px;
+    border: 1px solid var(--coral); border-radius: 999px; background: #fff; color: var(--coral);
+    font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .quitar:hover { background: var(--coral); color: #fff; }
+  .pastilla span { font-weight: 400; color: var(--tenue); }
+  .pastilla.on { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+  .pastilla.on span { color: rgba(255,255,255,.7); }
+
+  .gota { border: 0; background: none; padding: 0; cursor: pointer; line-height: 0; }
+  .disco {
+    display: block; width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid rgba(0,0,0,.14);
+    box-shadow: 0 0 0 2px var(--marfil), 0 0 0 2px transparent;
+    transition: box-shadow .15s ease, transform .15s ease;
+  }
+  .gota:hover .disco { transform: scale(1.12); }
+  .gota.on .disco { box-shadow: 0 0 0 2px var(--marfil), 0 0 0 4px var(--indigo); }
+
+  .tonos {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    margin-top: 14px; padding: 12px 14px;
+    background: #fff; border: 1px solid var(--linea); border-radius: var(--radio);
+  }
+  .et-tono { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--tenue); margin-right: 4px; }
+  .pastilla-tono {
+    padding: 5px 11px; border: 1px solid var(--linea); border-radius: 999px;
+    background: none; font: inherit; font-size: 12px; cursor: pointer; color: var(--carbon);
+  }
+  .pastilla-tono.on { background: var(--carbon); border-color: var(--carbon); color: #fff; }
+  .gota.chica .disco { width: 24px; height: 24px; }
+  .etiq { display: none; }
+</style>

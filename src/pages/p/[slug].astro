@@ -1,0 +1,282 @@
+---
+import Base from '../../layouts/Base.astro';
+import Tarjeta from '../../components/Tarjeta.astro';
+import { productos, ARBOL, pesos, terminacionesDe, hermanos, plazo, COLORES } from '../../lib/catalogo.js';
+
+export function getStaticPaths() {
+  return productos.map((p) => ({ params: { slug: p.url }, props: { p } }));
+}
+const { p } = Astro.props;
+const cat = ARBOL.find((c) => c.slug === p.cat);
+const sub = cat?.subs.find((s) => s.slug === p.sub);
+const otros = hermanos(p);
+const term = terminacionesDe(p).slice(0, 12);
+const fotos = [p.foto, ...p.galeria];
+const uni = (u) => (u === 'M2' ? 'm²' : u === 'BULTO' ? 'bulto' : 'pieza');
+const ent = plazo(p);
+---
+<Base titulo={p.nombre} descripcion={`${p.nombre} — talavera hecha a mano. ${p.formatos.length} formatos disponibles.`}>
+  <div class="contenedor">
+    <p class="miga">
+      <a href="/">Inicio</a> · <a href={`/${p.cat}/`}>{cat?.nombre}</a>
+      {sub && <> · <a href={`/${p.cat}/${p.sub}/`}>{sub.nombre}</a></>}
+    </p>
+
+    <div class="ficha">
+      <div class="galeria">
+        {p.foto_generica && (
+          <p class="referencia">
+            {p.colores.map((c) => <i style={`background:${COLORES[c] || '#ccc'}`}></i>)}
+            <span><b>Foto de referencia.</b> Muestra la forma de la pieza; el color de este producto es <b>{p.color}</b>. Estamos fotografiando cada color.</span>
+          </p>
+        )}
+        <div class="principal"><img id="foto" src={p.foto} alt={p.nombre} width="900" height="900" /></div>
+        {fotos.length > 1 && (
+          <div class="tiras">
+            {fotos.map((f, i) => (
+              <button class={`tira ${i === 0 ? 'on' : ''}`} data-src={f}>
+                <img src={f} alt="" loading="lazy" width="120" height="120" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div class="datos">
+        <p class="ruta">{cat?.nombre}{sub ? ` · ${sub.nombre}` : ''}</p>
+        <h1>{p.nombre}</h1>
+
+        <div class="precio">
+          <span id="precio">{pesos(p.formatos[0].precio_venta)}</span>
+          <small id="unidad">/ {uni(p.formatos[0].unidad)}</small>
+        </div>
+
+        {p.formatos.length > 1 && (
+          <div class="grupo">
+            <p class="et">Formato</p>
+            <div class="opciones">
+              {p.formatos.map((f, i) => (
+                <button class={`opt ${i === 0 ? 'on' : ''}`}
+                        data-precio={f.precio_venta} data-unidad={uni(f.unidad)} data-codigo={f.codigo}>
+                  {f.formato}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {otros.length > 0 && (
+          <details class="grupo colores" open>
+            <summary class="et">Otros colores <span>{otros.length}</span></summary>
+            <div class="paleta">
+              {otros.map((o) => (
+                <a href={`/p/${o.url}/`} title={o.color}>
+                  <img src={o.foto} alt={o.color} loading="lazy" width="80" height="80" />
+                  <span>{o.color}</span>
+                </a>
+              ))}
+            </div>
+          </details>
+        )}
+
+        <div class="entrega">
+          {ent.tag && <span class={ent.hay ? 'punto hay' : 'punto no'}></span>}
+          <div>
+            {ent.tag && <b>{ent.tag}</b>}
+            <span>Entrega en {ent.txt}</span>
+          </div>
+        </div>
+
+        <div class="agregar">
+          <div class="cant">
+            <button type="button" id="menos" aria-label="Quitar uno">−</button>
+            <input id="cant" type="number" min="1" value="1" inputmode="numeric" />
+            <button type="button" id="mas" aria-label="Agregar uno">+</button>
+            <span id="uni-cant">{uni(p.formatos[0].unidad)}</span>
+          </div>
+          <button class="comprar" id="add">Agregar al carrito</button>
+        </div>
+        <p class="agregado" id="ok" hidden>Agregado. <a href="/carrito/">Ver carrito →</a></p>
+
+        <dl class="specs">
+          {p.acabado && <><dt>Acabado</dt><dd>{p.acabado}</dd></>}
+          {p.color && <><dt>Color</dt><dd>{p.color}</dd></>}
+          {p.tipo_pieza && <><dt>Pieza</dt><dd>{p.tipo_pieza}</dd></>}
+          <dt>Clave</dt><dd id="clave">{p.formatos[0].codigo}</dd>
+        </dl>
+
+        <div class="aviso">
+          <p><b>Producto artesanal.</b> Está hecho y pintado a mano, así que el color y la medida pueden variar hasta un <b>5%</b> entre piezas y respecto de la foto. No es un defecto: es la prueba de que no lo hizo una máquina.</p>
+          <p><b>Considera 5% de merma</b> por traslados y cortes. Te recomendamos pedir entre 5% y 10% de material extra: los lotes cambian de tono y conseguir después una pieza igual no siempre se puede.</p>
+        </div>
+      </div>
+    </div>
+
+    {term.length > 0 && (
+      <section class="cruce">
+        <h2>Termina tu instalación</h2>
+        <p>Piezas de terminación en {p.acabado?.toLowerCase()} {p.color?.toLowerCase()}, el mismo color de este azulejo.</p>
+        <div class="rej">{term.map((t) => <Tarjeta p={t} />)}</div>
+      </section>
+    )}
+  </div>
+
+  <script define:vars={{ ficha: { nombre: p.nombre, url: p.url, foto: p.foto, formatos: p.formatos, plazo: ent.txt } }}>
+    const foto = document.getElementById('foto');
+    document.querySelectorAll('.tira').forEach((b) =>
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.tira').forEach((x) => x.classList.remove('on'));
+        b.classList.add('on');
+        foto.src = b.dataset.src;
+      })
+    );
+    // Nunca "precio desde": el precio cambia con el formato elegido.
+    const precio = document.getElementById('precio');
+    const unidad = document.getElementById('unidad');
+    const clave = document.getElementById('clave');
+    document.querySelectorAll('.opt').forEach((b) =>
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.opt').forEach((x) => x.classList.remove('on'));
+        b.classList.add('on');
+        precio.textContent = '$' + Number(b.dataset.precio).toLocaleString('es-MX', { maximumFractionDigits: 0 });
+        unidad.textContent = '/ ' + b.dataset.unidad;
+        if (clave) clave.textContent = b.dataset.codigo;
+        document.getElementById('uni-cant').textContent = b.dataset.unidad;
+      })
+    );
+
+    // --- carrito
+    const cant = document.getElementById('cant');
+    document.getElementById('menos').onclick = () => (cant.value = Math.max(1, +cant.value - 1));
+    document.getElementById('mas').onclick = () => (cant.value = +cant.value + 1);
+    document.getElementById('add').onclick = () => {
+      const sel = document.querySelector('.opt.on') || {};
+      const f = ficha.formatos.find((x) => x.codigo === (sel.dataset ? sel.dataset.codigo : ficha.formatos[0].codigo)) || ficha.formatos[0];
+      window.carrito.agregar({
+        codigo: f.codigo, nombre: ficha.nombre, url: ficha.url, foto: ficha.foto,
+        formato: f.formato, unidad: f.unidad === 'M2' ? 'm²' : f.unidad === 'BULTO' ? 'bulto' : 'pieza',
+        precio: f.precio_venta, plazo: ficha.plazo, cant: +cant.value,
+      });
+      const ok = document.getElementById('ok');
+      ok.hidden = false;
+      setTimeout(() => (ok.hidden = true), 4000);
+    };
+  </script>
+
+  <style>
+    .ficha { display: grid; grid-template-columns: 1.05fr 1fr; gap: 54px; padding: 20px 0 10px; }
+    @media (max-width: 900px) { .ficha { grid-template-columns: 1fr; gap: 30px; } }
+
+    .referencia {
+      display: flex; gap: 10px; align-items: flex-start; margin: 0 0 12px;
+      padding: 10px 13px; background: #fff;
+      border: 1px solid var(--linea); border-left: 2px solid var(--coral);
+      border-radius: var(--radio); font-size: 12px; color: var(--tenue); line-height: 1.5;
+    }
+    .referencia i {
+      width: 16px; height: 16px; border-radius: 50%; flex: 0 0 auto; margin-top: 2px;
+      border: 1px solid rgba(0,0,0,.14);
+    }
+    .referencia b { color: var(--carbon); }
+
+    .principal {
+      aspect-ratio: 1; border: 1px solid var(--linea); border-radius: var(--radio);
+      overflow: hidden; background: #fff;
+    }
+    .principal img { width: 100%; height: 100%; object-fit: cover; }
+    .tiras { display: flex; gap: 10px; margin-top: 12px; }
+    .tira {
+      width: 70px; height: 70px; padding: 0; border-radius: var(--radio); overflow: hidden;
+      border: 1px solid var(--linea); background: #fff; cursor: pointer;
+    }
+    .tira.on { border-color: var(--indigo); }
+    .tira img { width: 100%; height: 100%; object-fit: cover; }
+
+    .ruta { margin: 0; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--tenue); }
+    .datos h1 { margin: 8px 0 0; font-size: clamp(26px, 3.4vw, 38px); font-weight: 700; }
+    .precio { margin: 20px 0 28px; display: flex; align-items: baseline; gap: 8px; }
+    .precio span { font-size: 30px; font-weight: 600; }
+    .precio small { color: var(--tenue); font-size: 15px; }
+
+    .grupo { margin-bottom: 26px; }
+    .et {
+      margin: 0 0 10px; font-size: 12px; font-weight: 600; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--tenue); cursor: default;
+    }
+    summary.et { cursor: pointer; }
+    summary.et span { color: var(--indigo); }
+    .opciones { display: flex; flex-wrap: wrap; gap: 8px; }
+    .opt {
+      padding: 9px 16px; border: 1px solid var(--linea); border-radius: var(--radio);
+      background: #fff; font: inherit; font-size: 14px; cursor: pointer; color: var(--carbon);
+    }
+    .opt:hover { border-color: var(--indigo); }
+    .opt.on { border-color: var(--indigo); background: var(--indigo); color: #fff; }
+
+    .paleta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .paleta a { width: 58px; text-align: center; }
+    .paleta img {
+      width: 58px; height: 58px; object-fit: cover;
+      border: 1px solid var(--linea); border-radius: var(--radio);
+    }
+    .paleta a:hover img { border-color: var(--indigo); }
+    .paleta span {
+      display: block; margin-top: 4px; font-size: 10px; line-height: 1.2; color: var(--tenue);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    .entrega {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 12px 14px; margin-bottom: 18px;
+      background: #fff; border: 1px solid var(--linea); border-radius: var(--radio);
+      font-size: 13px;
+    }
+    .entrega b { display: block; font-size: 13px; }
+    .entrega span { color: var(--tenue); }
+    .punto { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex: 0 0 auto; }
+    .punto.hay { background: #3e7d3a; }
+    .punto.no { background: var(--coral); }
+
+    .agregar { display: flex; gap: 10px; align-items: stretch; margin-bottom: 8px; }
+    .cant {
+      display: flex; align-items: center; gap: 2px;
+      border: 1px solid var(--linea); border-radius: 999px; background: #fff; padding: 0 6px;
+    }
+    .cant button {
+      width: 32px; height: 40px; border: 0; background: none; cursor: pointer;
+      font-size: 18px; color: var(--carbon); line-height: 1;
+    }
+    .cant input {
+      width: 46px; border: 0; background: none; text-align: center;
+      font: inherit; font-size: 15px; font-weight: 600; -moz-appearance: textfield;
+    }
+    .cant input::-webkit-outer-spin-button, .cant input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .cant span { font-size: 12px; color: var(--tenue); padding-right: 8px; }
+    .agregado { margin: 0 0 20px; font-size: 13px; color: var(--indigo); font-weight: 600; }
+    .agregado a { text-decoration: underline; }
+
+    .comprar {
+      flex: 1; border: 0; font: inherit; cursor: pointer;
+      display: block; text-align: center; padding: 15px; margin: 0 0 18px;
+      background: var(--indigo); color: #fff; border-radius: 999px; font-weight: 600;
+    }
+    .comprar:hover { background: var(--coral); }
+
+    .specs { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; margin: 0 0 26px; font-size: 14px; }
+    .specs dt { color: var(--tenue); }
+    .specs dd { margin: 0; }
+
+    .aviso {
+      border-left: 2px solid var(--coral); padding: 2px 0 2px 16px;
+      font-size: 13px; color: var(--tenue);
+    }
+    .aviso p { margin: 0 0 10px; }
+    .aviso p:last-child { margin: 0; }
+    .aviso b { color: var(--carbon); }
+
+    .cruce { margin-top: 80px; padding-top: 40px; border-top: 1px solid var(--linea); }
+    .cruce h2 { font-size: 24px; font-weight: 600; }
+    .cruce > p { margin: 8px 0 24px; color: var(--tenue); font-size: 15px; }
+    .rej { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 22px 16px; }
+  </style>
+</Base>
