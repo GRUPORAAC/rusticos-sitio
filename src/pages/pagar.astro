@@ -31,7 +31,7 @@ import { TARIFAS } from '../lib/envio.js';
             <input name="colonia" required />
           </label>
           <label>Código postal
-            <input name="cp" required inputmode="numeric" maxlength="5" pattern="\d{5}" autocomplete="postal-code" />
+            <input name="cp" required inputmode="numeric" maxlength="5" pattern="[0-9]{5}" autocomplete="postal-code" />
           </label>
         </div>
         <label>Referencias para la entrega <span class="op">(opcional)</span>
@@ -44,6 +44,7 @@ import { TARIFAS } from '../lib/envio.js';
           <input type="checkbox" name="acepto" required />
           <span>Entiendo que es un <b>producto artesanal</b>: el color y la medida pueden variar hasta <b>5%</b>, y debo considerar hasta <b>5% de merma</b> por traslados y cortes. Acepto los <a href="/terminos/" target="_blank">términos y condiciones</a>.</span>
         </label>
+        <p id="err-acepto" class="err" hidden>Para continuar tienes que aceptar los términos y la variación del 5%.</p>
       </section>
 
       <aside class="resumen">
@@ -82,6 +83,14 @@ import { TARIFAS } from '../lib/envio.js';
       return { zona: 'fuera', lugar: '', costo: null };
     }
 
+    // ponytail: reportValidity solo ensena el mensaje del PRIMER campo invalido,
+    // asi que el checkbox necesita su propio aviso visible (Alek 2026-09-01).
+    function validar() {
+      const err = document.getElementById('err-acepto');
+      err.hidden = f.acepto.checked;
+      return f.reportValidity();
+    }
+
     const pesos = (n) => '$' + Number(n).toLocaleString('es-MX', { maximumFractionDigits: 0 });
     const f = document.getElementById('form');
     const carrito = window.carrito.leer();
@@ -112,6 +121,10 @@ import { TARIFAS } from '../lib/envio.js';
         `\n\nProductos: ${pesos(sub)}`;
       document.getElementById('wa').href = 'https://wa.me/525554147383?text=' + encodeURIComponent(texto);
     }
+
+    f.acepto.addEventListener('change', () => {
+      if (f.acepto.checked) document.getElementById('err-acepto').hidden = true;
+    });
 
     f.cp.addEventListener('input', () => {
       const z = zonaDe(f.cp.value);
@@ -162,7 +175,7 @@ import { TARIFAS } from '../lib/envio.js';
     }
 
     document.getElementById('mp').onclick = async () => {
-      if (!f.reportValidity()) return;
+      if (!validar()) return;
       const b = document.getElementById('mp');
       b.disabled = true; b.textContent = 'Preparando el pago…';
       const r = await fetch('/api/mercadopago', {
@@ -183,7 +196,7 @@ import { TARIFAS } from '../lib/envio.js';
       s.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=MXN`;
       s.onload = () => {
         window.paypal.Buttons({
-          onClick: () => f.reportValidity() && envio !== null,
+          onClick: () => validar() && envio !== null,
           // el TOTAL lo calcula el servidor con los precios del catalogo
           createOrder: () =>
             fetch('/api/paypal', {
@@ -239,6 +252,8 @@ import { TARIFAS } from '../lib/envio.js';
     .acepto input { width: auto; margin: 3px 0 0; flex: 0 0 auto; }
     .acepto b { color: var(--carbon); }
     .acepto a { color: var(--indigo); text-decoration: underline; }
+
+    .err { font-size: 13px; color: var(--coral); margin: 8px 0 0; font-weight: 600; }
 
     .resumen { border: 1px solid var(--linea); border-radius: var(--radio); background: #fff; padding: 22px; position: sticky; top: 100px; }
     .linea { display: flex; justify-content: space-between; gap: 14px; font-size: 13px; padding: 6px 0; color: var(--tenue); }
