@@ -126,7 +126,8 @@ def clasificar(p):
     return None
 
 
-def generar(xlsx: Path, salida: Path, fotos_dir: Path = None) -> dict:
+def generar(xlsx: Path, salida: Path, fotos_dir: Path = None,
+             precios_salida: Path = None) -> dict:
     wb = openpyxl.load_workbook(xlsx, read_only=True, data_only=True)
     hoja = wb["CATALOGO"]
     filas = hoja.iter_rows(values_only=True)
@@ -264,11 +265,22 @@ def generar(xlsx: Path, salida: Path, fotos_dir: Path = None) -> dict:
         json.dumps(productos, ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8",
     )
+
+    # El servidor NUNCA confia en el precio que manda el navegador: lo relee de
+    # aqui (functions/api/_pedido.js). Un SKU que no este en este archivo no se
+    # puede cobrar, asi que se genera de las MISMAS fichas ya publicadas.
+    precios = {v["codigo"]: v["precio_venta"]
+               for p in productos for v in p["formatos"]}
+    if precios_salida:
+        precios_salida.parent.mkdir(parents=True, exist_ok=True)
+        precios_salida.write_text(json.dumps(precios, separators=(",", ":")),
+                                  encoding="utf-8")
     return {
         "fichas": len(productos),
         "skus": sum(len(p["formatos"]) for p in productos),
         "fotos_unicas": len(fotos),
         "kb": round(salida.stat().st_size / 1024),
+        "precios": len(precios),
         "descartes": descartes,
         "sin_archivo": sin_archivo,
         "rutas_fotos": sorted(fotos),
@@ -279,8 +291,10 @@ if __name__ == "__main__":
     xlsx = Path(sys.argv[1] if len(sys.argv) > 1 else "CATALOGO_MAESTRO.xlsx")
     salida = Path(sys.argv[2] if len(sys.argv) > 2 else "productos.json")
     fotos = Path(sys.argv[3]) if len(sys.argv) > 3 else None
-    r = generar(xlsx, salida, fotos)
+    precios = Path(sys.argv[4]) if len(sys.argv) > 4 else Path("public/data/precios.json")
+    r = generar(xlsx, salida, fotos, precios)
     print(f"{r['fichas']} fichas · {r['skus']} SKUs · {r['fotos_unicas']} fotos · {r['kb']} KB")
+    print(f"precios.json: {r['precios']} codigos cobrables")
     print("descartadas:", r["descartes"])
     if r["sin_archivo"]:
         print(f'\nOCULTAS — la celda FOTO apunta a un archivo que no existe ({len(r["sin_archivo"])}):')
