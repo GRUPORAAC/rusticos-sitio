@@ -108,7 +108,7 @@ export function plazo(p) {
 
 /** Como se lee la unidad de venta. Un solo lugar para las 4 pantallas. */
 export const uni = (u) =>
-  ({ M2: 'm²', ML: 'metro', BULTO: 'bulto' }[String(u || '').toUpperCase()] || 'pieza');
+  ({ M2: 'm²', ML: 'metro lineal', BULTO: 'bulto' }[String(u || '').toUpperCase()] || 'pieza');
 
 export const pesos = (n) =>
   '$' + Number(n).toLocaleString('es-MX', { maximumFractionDigits: 0 });
@@ -121,11 +121,29 @@ export function terminacionesDe(p) {
   );
 }
 
+/** La medida nominal no es la real: el 10X10 de talavera mide 10.8 (Alek 2026-09-02). */
+const MEDIDA_REAL = { '10X10': '10.8 × 10.8 cm' };
+export const medida = (f) =>
+  MEDIDA_REAL[String(f || '').toUpperCase()] ||
+  String(f || '').toUpperCase().replace(/^(\d+(?:\.\d+)?)X(\d+(?:\.\d+)?)$/, '$1 × $2 cm');
+
+/** En decorados y relieve el DISEÑO es el producto: dos diseños distintos no son
+ *  "el mismo en otro color". Ahi no hay selector de color, van como similares. */
+const SIN_SELECTOR_DE_COLOR = new Set(['decorados', 'relieve']);
+
 /** Otros colores del mismo modelo: el selector de color NAVEGA entre productos. */
 export function hermanos(p) {
-  if (!p.color) return [];
+  if (!p.color || SIN_SELECTOR_DE_COLOR.has(p.cat)) return [];
   const base = (x) => `${x.cat}|${x.sub}|${(x.tipo_pieza || '')}`;
   return productos
     .filter((x) => base(x) === base(p) && x.acabado === p.acabado && x.color !== p.color)
     .sort((a, b) => a.nombre.localeCompare(b.nombre));
+}
+
+/** Productos similares: misma categoria y subcategoria, otro diseño. */
+export function similares(p, n = 8) {
+  return productos
+    .filter((x) => x.cat === p.cat && x.sub === p.sub && x.url !== p.url)
+    .sort((a, b) => a.nombre.localeCompare(b.nombre))
+    .slice(0, n);
 }

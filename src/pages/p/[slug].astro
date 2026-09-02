@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Tarjeta from '../../components/Tarjeta.astro';
-import { productos, ARBOL, pesos, terminacionesDe, hermanos, plazo, COLORES } from '../../lib/catalogo.js';
+import { productos, ARBOL, pesos, terminacionesDe, hermanos, similares, medida, plazo, COLORES } from '../../lib/catalogo.js';
 
 export function getStaticPaths() {
   return productos.map((p) => ({ params: { slug: p.url }, props: { p } }));
@@ -11,9 +11,10 @@ const cat = ARBOL.find((c) => c.slug === p.cat);
 const sub = cat?.subs.find((s) => s.slug === p.sub);
 const otros = hermanos(p);
 const term = terminacionesDe(p).slice(0, 12);
+const sim = similares(p);
 const fotos = [p.foto, ...p.galeria];
 const uni = (u) =>
-  ({ M2: 'm²', ML: 'metro', BULTO: 'bulto' }[String(u || '').toUpperCase()] || 'pieza');
+  ({ M2: 'm²', ML: 'metro lineal', BULTO: 'bulto' }[String(u || '').toUpperCase()] || 'pieza');
 const ent = plazo(p);
 ---
 <Base titulo={p.nombre} descripcion={`${p.nombre} — talavera hecha a mano. ${p.formatos.length} formatos disponibles.`}>
@@ -109,12 +110,37 @@ const ent = plazo(p);
           <dt>Clave</dt><dd id="clave">{p.formatos[0].codigo}</dd>
         </dl>
 
+        <details class="tecnica" open>
+          <summary class="et">Ficha técnica</summary>
+          <p>Talavera de <b>Dolores Hidalgo</b>, barro moldeado, esmaltado y pintado a mano pieza por pieza.</p>
+          <table>
+            <tr><th>Formato</th><th>Medida real</th><th>Piezas por caja</th><th>Rinde</th><th>Peso</th></tr>
+            {p.formatos.map((f) => (
+              <tr>
+                <td>{f.formato}</td>
+                <td>{medida(f.formato)}</td>
+                <td>{f.unidad === 'ML' ? `${f.pz_ml ?? '—'} pz / metro` : (f.pz_m2 ? `${f.pz_m2} pz` : '—')}</td>
+                <td>{f.unidad === 'M2' ? '1 caja = 1 m²' : (f.unidad === 'ML' ? '1 metro lineal' : '1 pieza')}</td>
+                <td>{f.kg ? `${f.kg} kg / ${uni(f.unidad)}` : '—'}</td>
+              </tr>
+            ))}
+          </table>
+        </details>
+
         <div class="aviso">
           <p><b>Producto artesanal.</b> Está hecho y pintado a mano, así que el color y la medida pueden variar hasta un <b>5%</b> entre piezas y respecto de la foto. No es un defecto: es la prueba de que no lo hizo una máquina.</p>
           <p><b>Considera 5% de merma</b> por traslados y cortes. Te recomendamos pedir entre 5% y 10% de material extra: los lotes cambian de tono y conseguir después una pieza igual no siempre se puede.</p>
         </div>
       </div>
     </div>
+
+    {sim.length > 0 && (
+      <section class="cruce">
+        <h2>Productos similares</h2>
+        <p>Otros diseños de {sub?.nombre?.toLowerCase() || cat?.nombre?.toLowerCase()}.</p>
+        <div class="rej">{sim.map((t) => <Tarjeta p={t} />)}</div>
+      </section>
+    )}
 
     {term.length > 0 && (
       <section class="cruce">
@@ -186,7 +212,7 @@ const ent = plazo(p);
       window.carrito.agregar({
         codigo: f.codigo, nombre: ficha.nombre, url: ficha.url, foto: ficha.foto,
         formato: f.formato,
-        unidad: { M2: 'm²', ML: 'metro', BULTO: 'bulto' }[String(f.unidad || '').toUpperCase()] || 'pieza',
+        unidad: { M2: 'm²', ML: 'metro lineal', BULTO: 'bulto' }[String(f.unidad || '').toUpperCase()] || 'pieza',
         precio: f.precio_venta, plazo: ficha.plazo, cant: +cant.value,
         min: f.min ?? 1, paso: f.paso ?? 1,
       });
@@ -313,4 +339,14 @@ const ent = plazo(p);
     .cruce > p { margin: 8px 0 24px; color: var(--tenue); font-size: 15px; }
     .rej { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 22px 16px; }
   </style>
+
+<style>
+  .tecnica { border: 1px solid var(--linea); border-radius: var(--radio); padding: 12px 14px; margin: 14px 0; }
+  .tecnica > summary { cursor: pointer; }
+  .tecnica p { margin: 8px 0 10px; font-size: 14px; }
+  .tecnica table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tecnica th, .tecnica td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--linea); }
+  .tecnica th { font-weight: 600; color: var(--carbon); }
+  .tecnica tr:last-child td { border-bottom: 0; }
+</style>
 </Base>
