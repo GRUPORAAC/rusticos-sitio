@@ -12,7 +12,8 @@ const sub = cat?.subs.find((s) => s.slug === p.sub);
 const otros = hermanos(p);
 const term = terminacionesDe(p).slice(0, 12);
 const fotos = [p.foto, ...p.galeria];
-const uni = (u) => (u === 'M2' ? 'm²' : u === 'BULTO' ? 'bulto' : 'pieza');
+const uni = (u) =>
+  ({ M2: 'm²', ML: 'metro', BULTO: 'bulto' }[String(u || '').toUpperCase()] || 'pieza');
 const ent = plazo(p);
 ---
 <Base titulo={p.nombre} descripcion={`${p.nombre} — talavera hecha a mano. ${p.formatos.length} formatos disponibles.`}>
@@ -57,7 +58,8 @@ const ent = plazo(p);
             <div class="opciones">
               {p.formatos.map((f, i) => (
                 <button class={`opt ${i === 0 ? 'on' : ''}`}
-                        data-precio={f.precio_venta} data-unidad={uni(f.unidad)} data-codigo={f.codigo}>
+                        data-precio={f.precio_venta} data-unidad={uni(f.unidad)} data-codigo={f.codigo}
+                        data-min={f.min ?? 1} data-paso={f.paso ?? 1}>
                   {f.formato}
                 </button>
               ))}
@@ -90,12 +92,14 @@ const ent = plazo(p);
         <div class="agregar">
           <div class="cant">
             <button type="button" id="menos" aria-label="Quitar uno">−</button>
-            <input id="cant" type="number" min="1" value="1" inputmode="numeric" />
+            <input id="cant" type="number" min={p.formatos[0].min ?? 1} step={p.formatos[0].paso ?? 1}
+                   value={p.formatos[0].min ?? 1} inputmode="decimal" />
             <button type="button" id="mas" aria-label="Agregar uno">+</button>
             <span id="uni-cant">{uni(p.formatos[0].unidad)}</span>
           </div>
           <button class="comprar" id="add">Agregar al carrito</button>
         </div>
+        <p class="regla" id="regla" hidden></p>
         <p class="agregado" id="ok" hidden>Agregado. <a href="/carrito/">Ver carrito →</a></p>
 
         <dl class="specs">
@@ -142,20 +146,49 @@ const ent = plazo(p);
         unidad.textContent = '/ ' + b.dataset.unidad;
         if (clave) clave.textContent = b.dataset.codigo;
         document.getElementById('uni-cant').textContent = b.dataset.unidad;
+        aplicarRegla(+b.dataset.min || 1, +b.dataset.paso || 1, b.dataset.unidad);
       })
     );
 
+    // Cuanto se puede comprar de este formato (Alek 2026-09-01): el relieve
+    // 10X10 se parte en media caja; el 15X15 y el 20X20 piden 3 m2.
+    const campo = document.getElementById('cant');
+    const aviso = document.getElementById('regla');
+    function aplicarRegla(minimo, paso, unidadTxt) {
+      campo.min = minimo;
+      campo.step = paso;
+      if (+campo.value < minimo) campo.value = minimo;
+      const partes = [];
+      if (minimo > 1) partes.push(`Mínimo ${minimo} ${unidadTxt}`);
+      if (paso < 1) partes.push(`se puede comprar de ${paso} en ${paso} (media caja)`);
+      aviso.hidden = !partes.length;
+      aviso.textContent = partes.join(' · ') + (partes.length ? '.' : '');
+    }
+    {
+      const b = document.querySelector('.opt.on');
+      aplicarRegla(
+        b ? +b.dataset.min || 1 : ficha.formatos[0].min || 1,
+        b ? +b.dataset.paso || 1 : ficha.formatos[0].paso || 1,
+        document.getElementById('uni-cant').textContent
+      );
+    }
+
     // --- carrito
     const cant = document.getElementById('cant');
-    document.getElementById('menos').onclick = () => (cant.value = Math.max(1, +cant.value - 1));
-    document.getElementById('mas').onclick = () => (cant.value = +cant.value + 1);
+    const redondo = (n) => Math.round(n * 100) / 100;
+    document.getElementById('menos').onclick = () =>
+      (cant.value = redondo(Math.max(+cant.min || 1, +cant.value - (+cant.step || 1))));
+    document.getElementById('mas').onclick = () =>
+      (cant.value = redondo(+cant.value + (+cant.step || 1)));
     document.getElementById('add').onclick = () => {
       const sel = document.querySelector('.opt.on') || {};
       const f = ficha.formatos.find((x) => x.codigo === (sel.dataset ? sel.dataset.codigo : ficha.formatos[0].codigo)) || ficha.formatos[0];
       window.carrito.agregar({
         codigo: f.codigo, nombre: ficha.nombre, url: ficha.url, foto: ficha.foto,
-        formato: f.formato, unidad: f.unidad === 'M2' ? 'm²' : f.unidad === 'BULTO' ? 'bulto' : 'pieza',
+        formato: f.formato,
+        unidad: { M2: 'm²', ML: 'metro', BULTO: 'bulto' }[String(f.unidad || '').toUpperCase()] || 'pieza',
         precio: f.precio_venta, plazo: ficha.plazo, cant: +cant.value,
+        min: f.min ?? 1, paso: f.paso ?? 1,
       });
       const ok = document.getElementById('ok');
       ok.hidden = false;
@@ -252,6 +285,7 @@ const ent = plazo(p);
     }
     .cant input::-webkit-outer-spin-button, .cant input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .cant span { font-size: 12px; color: var(--tenue); padding-right: 8px; }
+    .regla { font-size: 12px; color: var(--tenue); margin: 10px 0 0; }
     .agregado { margin: 0 0 20px; font-size: 13px; color: var(--indigo); font-weight: 600; }
     .agregado a { text-decoration: underline; }
 

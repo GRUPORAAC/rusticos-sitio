@@ -79,7 +79,10 @@ export const ARBOL = [
       { slug: 'bagueta', nombre: 'Bagueta' },
       { slug: 'remate', nombre: 'Remate' },
       { slug: 'codo', nombre: 'Codo' },
-      { slug: 'corniza', nombre: 'Corniza' },
+      { slug: 'lapiz', nombre: 'Lápiz' },
+      { slug: 'listelo', nombre: 'Listelo' },
+      { slug: 'pecho-paloma', nombre: 'Pecho Paloma' },
+      { slug: 'trenza', nombre: 'Trenza' },
     ],
   },
   {
@@ -102,6 +105,10 @@ export function plazo(p) {
   if (d) return { txt: '15 a 25 días hábiles', tag: 'Bajo pedido', hay: false };
   return { txt: '5 a 25 días hábiles según disponibilidad', tag: null, hay: null };
 }
+
+/** Como se lee la unidad de venta. Un solo lugar para las 4 pantallas. */
+export const uni = (u) =>
+  ({ M2: 'm²', ML: 'metro', BULTO: 'bulto' }[String(u || '').toUpperCase()] || 'pieza');
 
 export const pesos = (n) =>
   '$' + Number(n).toLocaleString('es-MX', { maximumFractionDigits: 0 });

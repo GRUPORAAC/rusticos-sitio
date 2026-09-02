@@ -47,18 +47,58 @@ export async function onRequestPost({ request, env }) {
     const v = await validar(body.pedido, new URL(request.url).origin);
     if (!v.ok) return json({ error: v.error }, 400);
 
-    const r = await fetch(`${api(env)}/v2/checkout/orders`, {
-      method: 'POST',
-      headers: cab,
-      body: JSON.stringify({
-        intent: 'CAPTURE',
-        purchase_units: [{
-          amount: { currency_code: 'MXN', value: v.total.toFixed(2) },
-          description: 'Pedido Bodega de Talavera',
-        }],
-      }),
-    });
-    const d = await r.json();
+    // El pedido viaja COMPLETO a PayPal: productos, cantidades y direccion.
+    // Antes solo iba el total y Federico no sabia ni que se vendio ni a donde
+    // mandarlo (hallazgo 2026-09-01).
+    const p = body.pedido || {};
+    const estado = v.zona === 'normal' ? 'Ciudad de Mexico' : 'Estado de Mexico';
+    const unidad = { currency_code: 'MXN' };
+
+    const base = {
+      description: `Pedido Bodega de Talavera (${v.items.length} producto${v.items.length > 1 ? 's' : ''})`,
+      custom_id: `CP ${p.cp || '?'} · Tel ${String(p.telefono || '?').slice(0, 20)}`.slice(0, 127),
+      amount: {
+        ...unidad,
+        value: v.total.toFixed(2),
+        breakdown: {
+          item_total: { ...unidad, value: v.productos.toFixed(2) },
+          shipping: { ...unidad, value: v.envio.toFixed(2) },
+        },
+      },
+      items: v.items.map((i) => ({
+        name: `${i.nombre} ${i.formato}`.trim().slice(0, 127),
+        sku: i.codigo.slice(0, 127),
+        quantity: String(i.cant),
+        unit_amount: { ...unidad, value: i.precio.toFixed(2) },
+      })),
+      shipping: {
+        name: { full_name: String(p.nombre || '').slice(0, 300) },
+        address: {
+          address_line_1: String(p.calle || p.direccion || '').slice(0, 300),
+          address_line_2: String(p.colonia || '').slice(0, 300),
+          admin_area_2: estado,
+          admin_area_1: estado,
+          postal_code: String(p.cp || ''),
+          country_code: 'MX',
+        },
+      },
+    };
+
+    const crear = (unidades) =>
+      fetch(`${api(env)}/v2/checkout/orders`, {
+        method: 'POST',
+        headers: cab,
+        body: JSON.stringify({ intent: 'CAPTURE', purchase_units: [unidades] }),
+      });
+
+    let r = await crear(base);
+    let d = await r.json();
+    // Si PayPal se queja del desglose o de la direccion, se cobra igual con el
+    // total pelon: nunca se cae el pago por un dato de adorno.
+    if (!r.ok) {
+      r = await crear({ description: base.description, custom_id: base.custom_id, amount: { ...unidad, value: v.total.toFixed(2) } });
+      d = await r.json();
+    }
     if (!r.ok) return json({ error: 'paypal_crear', detalle: d }, 502);
     return json({ id: d.id, total: v.total });
   }

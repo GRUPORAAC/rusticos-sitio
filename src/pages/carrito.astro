@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { productos, plazo } from '../lib/catalogo.js';
+import { productos, plazo, uni } from '../lib/catalogo.js';
 
 // ponytail: el pegazulejo se sugiere aqui, que es donde se decide la compra.
 // Sin motor de recomendaciones: son 2 productos, se listan tal cual.
@@ -31,9 +31,9 @@ const pega = productos.filter((p) => p.cat === 'pegazulejo');
                 <img src={p.foto} alt={p.nombre} width="120" height="120" loading="lazy" />
                 <div>
                   <h3>{p.nombre}</h3>
-                  <p class="precio">{'$' + p.formatos[0].precio_venta.toLocaleString('es-MX')} <span>por {p.formatos[0].unidad.toLowerCase()}</span></p>
+                  <p class="precio">{'$' + p.formatos[0].precio_venta.toLocaleString('es-MX')} <span>por {uni(p.formatos[0].unidad)}</span></p>
                   <button type="button" class="add-pega" data-cod={p.formatos[0].codigo} data-nom={p.nombre}
-                    data-fmt={p.formatos[0].formato || ''} data-uni={p.formatos[0].unidad}
+                    data-fmt={p.formatos[0].formato || ''} data-uni={uni(p.formatos[0].unidad)}
                     data-pre={p.formatos[0].precio_venta} data-plazo={plazo(p).txt}>Agregar</button>
                 </div>
               </article>
@@ -75,7 +75,7 @@ const pega = productos.filter((p) => p.cat === 'pegazulejo');
               <div><a href="/p/${x.url}/">${x.nombre}</a><small>${x.codigo}</small></div>
             </td>
             <td>${x.formato}</td>
-            <td class="num"><input type="number" min="1" value="${x.cant}" data-cod="${x.codigo}" /> <small>${x.unidad}</small></td>
+            <td class="num"><input type="number" min="${x.min || 1}" step="${x.paso || 1}" value="${x.cant}" data-cod="${x.codigo}" /> <small>${x.unidad}</small></td>
             <td class="num">${pesos(x.precio)}</td>
             <td class="num">${pesos(x.precio * x.cant)}</td>
             <td class="num"><button class="x" data-cod="${x.codigo}" aria-label="Quitar">×</button></td>

@@ -71,9 +71,12 @@ def slug(*trozos) -> str:
 EXCLUIR_CATEGORIA = {"Loseta/Baldosa", "Barro"}
 EXCLUIR_ACABADO = {"Estriado / Petatillo"}
 
-# Formatos que NO se publican en la tienda (Alek 2026-08-29). Se quitan SOLO del
-# sitio: en el catalogo siguen vivos y se siguen vendiendo en mostrador.
-EXCLUIR_FORMATO = {"7X7"}
+# Formatos que NO se publican en la tienda. Se quitan SOLO del sitio: en el
+# catalogo siguen vivos y se siguen vendiendo en mostrador.
+#   7X7  — Alek 2026-08-29
+#   5X5  — Alek 2026-09-01: al vender por m2 el 5X5 sale 4x mas caro que el
+#          10X10 del mismo modelo (400 piezas contra 90) y se lee como error.
+EXCLUIR_FORMATO = {"7X7", "5X5"}
 
 GRUPO_DECORADO = {"1": "sencillo", "2": "sencillo",
                   "3": "elaborado", "4": "elaborado",
@@ -117,13 +120,86 @@ def clasificar(p):
     if cat.startswith("Terminacion"):
         tp = p.get("tipo_pieza", "")
         if tp == "Corniza":
-            return ("terminaciones", "corniza")
+            # Alek 2026-09-01: "Corniza" no es una categoria, es un cajon. Cada
+            # forma (Lapiz, Listelo, Pecho Paloma, Trenza) va al mismo nivel que
+            # Angulo y Bagueta.
+            return ("terminaciones", slug(p.get("pieza_forma")) or "corniza")
         return ("terminaciones", slug(tp) or "otros")
 
     if cat == "Pegamento/Adhesivo":
         return ("pegazulejo", "pegazulejo")
 
     return None
+
+
+# ==================================================== UNIDAD DE VENTA EN EL SITIO
+# Alek 2026-09-01. El catalogo NO se toca: esto cambia como se VENDE en linea.
+#   · azulejo, decorados y relieve -> siempre por METRO CUADRADO
+#   · terminaciones de 10 y 15 CM  -> por METRO LINEAL
+#   · Codo y Uña                   -> siguen por PIEZA (no forman corrida)
+#   · boutique y pegazulejo        -> sin cambio
+VENDE_POR_M2 = {"azulejo", "decorados", "relieve"}
+
+# ---------------------------------------------------------------- PESO Y COMPRA
+# Pesos dictados por Alek 2026-09-01. En talavera LA CAJA TRAE 1 M2 en todos los
+# formatos, asi que el peso de la caja es el peso del metro cuadrado.
+PESO_M2 = {"20X20": 17, "15X15": 15, "10X10": 15, "5X5": 15}
+PESO_ML_TERMINACION = 0.5          # un metro lineal de terminacion
+PESO_PIEZA_CHICA = 0.025           # codo y uña
+PESO_PIEZA_BOUTIQUE = round(15 / 90, 3)   # "pesa lo mismo que el 10X10" (por pieza)
+
+# Cuanto se puede comprar. (cat, formato) -> (minimo, paso). Alek 2026-09-01:
+# el relieve 10X10 se puede partir en media caja; el 15X15 y el 20X20 piden 3 m2.
+REGLAS_COMPRA = {
+    ("relieve", "10X10"): (0.5, 0.5),
+    ("relieve", "15X15"): (3, 1),
+    ("relieve", "20X20"): (3, 1),
+}
+
+
+def peso_de(cat, formato, unidad):
+    """Kilos de UNA unidad de venta (1 m2, 1 metro lineal, 1 pieza)."""
+    if unidad == "M2":
+        return PESO_M2.get(formato)
+    if unidad == "ML":
+        return PESO_ML_TERMINACION
+    if unidad == "PIEZA":
+        if cat == "terminaciones":
+            return PESO_PIEZA_CHICA     # codo y uña
+        if cat == "boutique":
+            return PESO_PIEZA_BOUTIQUE
+    return None                          # pegazulejo: falta el peso del bulto
+# Piezas ENTERAS por metro lineal: no se puede partir una pieza, asi que 1 m de
+# 15 CM son 7 piezas (6.67 redondeado arriba) y se cobran las 7 (Alek 2026-09-01).
+PIEZAS_POR_METRO = {"10 CM": 10, "15 CM": 7}
+
+
+def unidad_de_venta(p):
+    """Reescribe precio y unidad de cada formato. Corre DESPUES de clasificar,
+    y antes de escribir productos.json y precios.json, para que el precio que
+    ve el cliente y el que cobra el servidor sean el mismo."""
+    for f in p["formatos"]:
+        unidad = str(f.get("unidad", "")).upper()
+        formato = str(f.get("formato", "")).upper()
+
+        if p["cat"] in VENDE_POR_M2 and unidad == "PIEZA" and f.get("pz_m2"):
+            f["precio_venta"] = math.ceil(f["precio_venta"] * f["pz_m2"])
+            f["unidad"] = "M2"
+
+        elif p["cat"] == "terminaciones" and formato in PIEZAS_POR_METRO:
+            piezas = PIEZAS_POR_METRO[formato]
+            f["precio_venta"] = f["precio_venta"] * piezas
+            f["unidad"] = "ML"
+            f["pz_ml"] = piezas
+
+        minimo, paso = REGLAS_COMPRA.get((p["cat"], formato), (1, 1))
+        f["min"] = minimo
+        f["paso"] = paso
+        kg = peso_de(p["cat"], formato, f["unidad"])
+        if kg:
+            f["kg"] = kg
+
+    p["formatos"].sort(key=lambda x: x.get("precio_venta") or 0)
 
 
 def generar(xlsx: Path, salida: Path, fotos_dir: Path = None,
@@ -139,6 +215,7 @@ def generar(xlsx: Path, salida: Path, fotos_dir: Path = None,
         sys.exit(f"ERROR: el Excel no tiene estas columnas: {faltantes}")
 
     productos, fotos = [], set()
+    fotos_sueltas = {}  # url -> celda FOTO de una fila de formato excluido
     descartes = {"descontinuado": 0, "no_bodega": 0, "sin_precio": 0, "sin_foto": 0,
                  "formato_excluido": 0}
 
@@ -154,11 +231,13 @@ def generar(xlsx: Path, salida: Path, fotos_dir: Path = None,
         if not fila[idx["PRECIO_VENTA"]]:
             descartes["sin_precio"] += 1
             continue
-        if not fila[idx["FOTO"]]:
-            descartes["sin_foto"] += 1  # regla dura: sin foto no se publica
-            continue
         if str(fila[idx["FORMATO"]] or "").strip().upper() in EXCLUIR_FORMATO:
             descartes["formato_excluido"] += 1  # fuera del sitio, no del catalogo
+            # el formato no se vende, pero su FOTO sigue siendo la del modelo:
+            # se guarda por si ningun formato publicable la trae (caso P10/P19).
+            if fila[idx["FOTO"]]:
+                u = slug(fila[idx["ACABADO"]], fila[idx["PRODUCTO"]], fila[idx["COLOR"]])
+                fotos_sueltas.setdefault(u, str(fila[idx["FOTO"]]))
             continue
 
         p = {}
@@ -172,11 +251,12 @@ def generar(xlsx: Path, salida: Path, fotos_dir: Path = None,
 
         # la celda FOTO puede traer VARIAS rutas separadas por "|":
         # la primera es la portada, las demas son galeria.
-        crudas = [x.strip() for x in str(fila[idx["FOTO"]]).split("|") if x.strip()]
-        p["foto"] = normaliza_ruta_foto(crudas[0])
-        if len(crudas) > 1:
-            p["galeria"] = [normaliza_ruta_foto(x) for x in crudas[1:]]
-        fotos.update(crudas)
+        crudas = [x.strip() for x in str(fila[idx["FOTO"]] or "").split("|") if x.strip()]
+        if crudas:
+            p["foto"] = normaliza_ruta_foto(crudas[0])
+            if len(crudas) > 1:
+                p["galeria"] = [normaliza_ruta_foto(x) for x in crudas[1:]]
+            fotos.update(crudas)
         p["url"] = slug(p.get("acabado"), p.get("producto"), p.get("color"))
         productos.append(p)
 
@@ -188,6 +268,7 @@ def generar(xlsx: Path, salida: Path, fotos_dir: Path = None,
         if f is None:
             f = {k: v for k, v in p.items() if k not in ("formato", "precio_venta",
                                                          "unidad", "pz_m2", "codigo")}
+            f.pop("foto", None)
             f["formatos"] = []
             f.pop("galeria", None) if False else None
             fichas[p["url"]] = f
@@ -199,9 +280,22 @@ def generar(xlsx: Path, salida: Path, fotos_dir: Path = None,
         f["formatos"].append({k: p[k] for k in
                               ("codigo", "formato", "precio_venta", "unidad", "pz_m2")
                               if k in p})
-    for f in fichas.values():
+        # la primera foto que aparezca en cualquier formato vale para la ficha
+        if "foto" in p and "foto" not in f:
+            f["foto"] = p["foto"]
+            if "galeria" in p:
+                f["galeria"] = p["galeria"]
+    for u, f in fichas.items():
         f["formatos"].sort(key=lambda x: x.get("precio_venta") or 0)
-    productos = list(fichas.values())
+        if not f.get("foto") and u in fotos_sueltas:
+            crudas = [x.strip() for x in fotos_sueltas[u].split("|") if x.strip()]
+            f["foto"] = normaliza_ruta_foto(crudas[0])
+            fotos.update(crudas)
+    # regla dura: SIN FOTO NO SE PUBLICA. Se juzga por FICHA (modelo+color),
+    # no por fila: si ningun formato del modelo tiene foto, la ficha no sale.
+    antes = len(fichas)
+    productos = [f for f in fichas.values() if f.get("foto")]
+    descartes["sin_foto"] = antes - len(productos)
 
     # ---- regla dura: SIN FOTO NO SE PUBLICA.
     # No basta con que la celda FOTO tenga texto: el archivo tiene que existir.
@@ -253,6 +347,11 @@ def generar(xlsx: Path, salida: Path, fotos_dir: Path = None,
     productos = del_arbol
     descartes["fuera_del_arbol"] = fuera
 
+    # como se vende en linea (m2 / metro lineal). Va aqui: ya hay cat, y todavia
+    # no se escriben productos.json ni precios.json.
+    for x in productos:
+        unidad_de_venta(x)
+
     # REGLA DURA (Alek 2026-08-29): SIN FOTO PROPIA NO SE PUBLICA, en TODAS las
     # secciones. Una foto compartida por varios colores muestra la forma, no el
     # color, y engana al cliente (se vio en boutique y en terminaciones: el remate
@@ -269,7 +368,12 @@ def generar(xlsx: Path, salida: Path, fotos_dir: Path = None,
     # El servidor NUNCA confia en el precio que manda el navegador: lo relee de
     # aqui (functions/api/_pedido.js). Un SKU que no este en este archivo no se
     # puede cobrar, asi que se genera de las MISMAS fichas ya publicadas.
-    precios = {v["codigo"]: v["precio_venta"]
+    # El servidor necesita mas que el precio: cuanto es lo minimo que se puede
+    # comprar, de cuanto en cuanto, y cuanto pesa (para el envio).
+    precios = {v["codigo"]: {"p": v["precio_venta"],
+                             "min": v.get("min", 1),
+                             "paso": v.get("paso", 1),
+                             **({"kg": v["kg"]} if v.get("kg") else {})}
                for p in productos for v in p["formatos"]}
     if precios_salida:
         precios_salida.parent.mkdir(parents=True, exist_ok=True)

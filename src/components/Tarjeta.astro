@@ -1,7 +1,7 @@
 ---
-import { pesos, COLORES } from '../lib/catalogo.js';
+import { pesos, COLORES, uni } from '../lib/catalogo.js';
 const { p } = Astro.props;
-const uni = p.formatos[0].unidad === 'M2' ? 'm²' : 'pieza';
+const unidad = uni(p.formatos[0].unidad);
 ---
 <a class="tarjeta" href={`/p/${p.url}/`}>
   <div class="foto">
@@ -14,7 +14,7 @@ const uni = p.formatos[0].unidad === 'M2' ? 'm²' : 'pieza';
   </div>
   <div class="txt">
     <p class="nom">{p.nombre}</p>
-    <p class="pre">{pesos(p.desde)} <span>/ {uni}</span></p>
+    <p class="pre">{pesos(p.desde)} <span>/ {unidad}</span></p>
   </div>
 </a>
 <style>
