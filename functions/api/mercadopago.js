@@ -46,12 +46,26 @@ export async function onRequestPost({ request, env }) {
     },
     auto_return: 'approved',
     statement_descriptor: 'BODEGA TALAVERA',
+    // Todo lo que el aviso va a necesitar viaja en metadata: el webhook lo lee
+    // de vuelta del pago y no hace falta guardar el pedido en ningun lado.
     metadata: {
+      nombre: (pedido.nombre || '').slice(0, 120),
+      correo: (pedido.correo || '').slice(0, 120),
       telefono: pedido.telefono || '',
       direccion: pedido.direccion || '',
+      calle: (pedido.calle || '').slice(0, 200),
+      colonia: (pedido.colonia || '').slice(0, 120),
+      referencias: (pedido.referencias || '').slice(0, 200),
       cp: pedido.cp || '',
-      zona: pedido.zona || '',
+      zona: v.zona,
+      productos: v.productos,
+      envio: v.envio,
+      kilos: v.kilos,
     },
+    // A donde le avisa MP cuando el pago se aprueba (incluido el OXXO que se
+    // paga horas despues). Sin esto el pedido no le llega a nadie.
+    notification_url: `${origen}/api/mp-webhook`,
+    external_reference: `BT-${Date.now()}`,
   };
 
   const r = await fetch('https://api.mercadopago.com/checkout/preferences', {

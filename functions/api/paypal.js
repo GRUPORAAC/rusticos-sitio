@@ -11,6 +11,7 @@
  *     PAYPAL_ENTORNO    'sandbox' para pruebas, 'live' para cobrar de verdad
  */
 import { validar, json } from './_pedido.js';
+import { avisarPedido } from './_correo.js';
 
 const api = (env) =>
   (env.PAYPAL_ENTORNO || 'sandbox') === 'live'
@@ -116,7 +117,36 @@ export async function onRequestPost({ request, env }) {
     if (d.status !== 'COMPLETED' || cap?.status !== 'COMPLETED') {
       return json({ error: 'pago_no_completado', estado: d.status }, 402);
     }
-    return json({ ok: true, id: d.id, monto: cap.amount?.value, moneda: cap.amount?.currency_code });
+
+    // ---- el aviso: el pedido ya se cobro, ahora hay que avisarle a RAAC.
+    // Va DESPUES de confirmar el cobro y envuelto en try/catch: si el correo
+    // falla, el cliente ve su "gracias" igual y el dinero ya entro.
+    let aviso = 'sin_pedido';
+    try {
+      const p = body.pedido || {};
+      const v = await validar(p, new URL(request.url).origin);
+      if (v.ok) {
+        const cobrado = Number(cap.amount?.value || 0);
+        const res = await avisarPedido(env, {
+          metodo: 'PayPal' + ((env.PAYPAL_ENTORNO || 'sandbox') === 'live' ? '' : ' (SANDBOX — prueba)'),
+          referencia: cap.id || d.id,
+          items: v.items, productos: v.productos, envio: v.envio,
+          // se reporta lo que PayPal cobro de verdad, no lo que el sitio esperaba
+          total: cobrado || v.total,
+          zona: v.zona, kilos: v.kilos,
+          nombre: p.nombre, correo: p.correo, telefono: p.telefono,
+          calle: p.calle || p.direccion, colonia: p.colonia, referencias: p.referencias, cp: p.cp,
+          descuadre: Math.abs(cobrado - v.total) > 0.01 ? v.total : null,
+        });
+        aviso = res.ok ? 'enviado' : res.error;
+      } else {
+        aviso = 'pedido_invalido:' + v.error;
+      }
+    } catch (e) {
+      aviso = 'error:' + String(e).slice(0, 120);
+    }
+
+    return json({ ok: true, id: d.id, monto: cap.amount?.value, moneda: cap.amount?.currency_code, aviso });
   }
 
   return json({ error: 'accion_invalida' }, 400);

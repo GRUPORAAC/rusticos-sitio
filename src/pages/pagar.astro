@@ -212,7 +212,7 @@ import { TARIFAS } from '../lib/envio.js';
             fetch('/api/paypal', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ accion: 'capturar', orderID: d.orderID }),
+              body: JSON.stringify({ accion: 'capturar', orderID: d.orderID, pedido: datosPedido() }),
             })
               .then((r) => r.json())
               .then((res) => {
