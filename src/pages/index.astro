@@ -178,12 +178,12 @@ const OBRA = [
     }
     .pista figure {
       position: relative; margin: 0; scroll-snap-align: start;
-      flex: 0 0 clamp(200px, 20vw, 262px);
+      flex: 0 0 clamp(230px, 24vw, 300px);
     }
     .pista img {
-      /* 1:1, no 3/4: las tomas son verticales y al cuadro conservan TODO el
-         ancho de la escena, solo pierden techo y piso (Alek 2026-09-03). */
-      width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+      /* 4:5, no 3/4 ni 1:1 (Alek 2026-09-03, opcion A): 3/4 en tarjeta angosta
+         se leia como "spaghetti"; 4:5 mas ancha casi no recorta la escena. */
+      width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block;
       border-radius: var(--radio); background: #ece8e1;
       transition: filter .35s ease, transform .35s ease;
     }
