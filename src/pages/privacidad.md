@@ -6,7 +6,7 @@ titulo: Aviso de privacidad
 # AVISO DE PRIVACIDAD
 
 **Bodega de Talavera**
-Última actualización: 29 de agosto de 2026
+Última actualización: 3 de septiembre de 2026
 
 ## 1. Quién es responsable de tus datos
 
@@ -74,4 +74,5 @@ Podemos actualizar este aviso por cambios legales, en nuestros servicios o en nu
 
 ---
 
-**Contacto para cualquier duda sobre privacidad: [ ] CORREO**
+**Contacto para cualquier duda sobre privacidad:**
+info@bodegadetalavera.com · WhatsApp [+52 55 5414 7383](https://wa.me/525554147383)

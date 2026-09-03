@@ -150,6 +150,11 @@ PESO_M2 = {"20X20": 17, "15X15": 15, "10X10": 15, "5X5": 15}
 PESO_ML_TERMINACION = 0.5          # un metro lineal de terminacion
 PESO_PIEZA_CHICA = 0.025           # codo y uña
 PESO_PIEZA_BOUTIQUE = round(15 / 90, 3)   # "pesa lo mismo que el 10X10" (por pieza)
+PESO_BULTO = 20                    # pegazulejo: el catalogo dice "20 KG" en FORMATO
+# ponytail: la cintilla es el MISMO barro esmaltado del azulejo, solo cortado en
+# tira, asi que un m2 de cintilla pesa lo que un m2 de azulejo. Sirve mientras la
+# cintilla se venda por M2; si se cambia a pieza o metro lineal, este numero cambia.
+PESO_M2_CINTILLA = 15
 
 # Cuanto se puede comprar. (cat, formato) -> (minimo, paso). Alek 2026-09-01:
 # el relieve 10X10 se puede partir en media caja; el 15X15 y el 20X20 piden 3 m2.
@@ -163,7 +168,8 @@ REGLAS_COMPRA = {
 def peso_de(cat, formato, unidad):
     """Kilos de UNA unidad de venta (1 m2, 1 metro lineal, 1 pieza)."""
     if unidad == "M2":
-        return PESO_M2.get(formato)
+        # los formatos de cintilla (5X20, 7.5X15...) no estan en PESO_M2
+        return PESO_M2.get(formato, PESO_M2_CINTILLA if cat == "cintilla" else None)
     if unidad == "ML":
         return PESO_ML_TERMINACION
     if unidad == "PIEZA":
@@ -171,7 +177,9 @@ def peso_de(cat, formato, unidad):
             return PESO_PIEZA_CHICA     # codo y uña
         if cat == "boutique":
             return PESO_PIEZA_BOUTIQUE
-    return None                          # pegazulejo: falta el peso del bulto
+    if unidad == "BULTO":
+        return PESO_BULTO
+    return None
 # Piezas ENTERAS por metro lineal: no se puede partir una pieza, asi que 1 m de
 # 15 CM son 7 piezas (6.67 redondeado arriba) y se cobran las 7 (Alek 2026-09-01).
 PIEZAS_POR_METRO = {"10 CM": 10, "15 CM": 7}

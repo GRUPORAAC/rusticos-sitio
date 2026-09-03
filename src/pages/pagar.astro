@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { TARIFAS } from '../lib/envio.js';
+import { ANILLOS, MAX_KG } from '../lib/envio.js';
 ---
 <Base titulo="Finalizar compra">
   <div class="contenedor pago">
@@ -67,21 +67,25 @@ import { TARIFAS } from '../lib/envio.js';
     </form>
   </div>
 
-  <script is:inline define:vars={{ TARIFAS }}>
-    const ALTA = [['Nezahualcóyotl',57000,57999],['Naucalpan de Juárez',53000,53999],['La Paz (Los Reyes)',56400,56529],
-      ['Huixquilucan',52760,52799],['Tlalnepantla de Baz',54000,54199],['Valle de Chalco',56610,56619],
-      ['Chimalhuacán',56330,56369],['Atizapán de Zaragoza',52900,52999],['Chicoloapan',56370,56399],
-      ['Chalco',56600,56609],['Chalco',56620,56649],['Ixtapaluca',56530,56599],['Ecatepec de Morelos',55000,55599],
-      ['Coacalco de Berriozábal',55700,55739],['Tultitlán',54900,54999],['Texcoco',56100,56269],
-      ['Cuautitlán Izcalli',54700,54769]];
-
-    function zonaDe(cp) {
-      const n = parseInt(String(cp).trim(), 10);
-      if (!/^\d{5}$/.test(String(cp).trim())) return { zona: '', lugar: '', costo: null };
-      if (n >= 1000 && n <= 16999) return { zona: 'normal', lugar: 'Ciudad de México', costo: TARIFAS.normal };
-      for (const [lugar, a, b] of ALTA) if (n >= a && n <= b) return { zona: 'alta', lugar, costo: TARIFAS.alta };
-      return { zona: 'fuera', lugar: '', costo: null };
+  <script is:inline define:vars={{ ANILLOS, MAX_KG }}>
+    // ponytail: la tabla viaja desde src/lib/envio.js por define:vars — una sola
+    // fuente para el navegador. functions/api/_pedido.js tiene su propia copia
+    // (no puede importar de src/) y test_envio.mjs falla si las dos divergen.
+    function zonaDe(cp, kilos = 0) {
+      const s = String(cp ?? '').trim();
+      if (!/^\d{5}$/.test(s)) return { zona: '', lugar: '', costo: null, motivo: '' };
+      const n = parseInt(s, 10);
+      for (const [lugar, a, b, costo] of ANILLOS) {
+        if (n >= a && n <= b) {
+          if (kilos > MAX_KG) return { zona: 'fuera', lugar, costo: null, motivo: 'peso' };
+          return { zona: 'ok', lugar, costo, motivo: '' };
+        }
+      }
+      return { zona: 'fuera', lugar: '', costo: null, motivo: 'cp' };
     }
+
+    const kilosCarrito = () =>
+      window.carrito.leer().reduce((s, x) => s + (Number(x.kg) || 0) * x.cant, 0);
 
     // ponytail: reportValidity solo ensena el mensaje del PRIMER campo invalido,
     // asi que el checkbox necesita su propio aviso visible (Alek 2026-09-01).
@@ -127,18 +131,20 @@ import { TARIFAS } from '../lib/envio.js';
     });
 
     f.cp.addEventListener('input', () => {
-      const z = zonaDe(f.cp.value);
+      const z = zonaDe(f.cp.value, kilosCarrito());
       const caja = document.getElementById('zona');
       zona = z.zona;
       if (!z.zona) { caja.hidden = true; envio = null; document.getElementById('wa').hidden = true; return pintarTotales(); }
       caja.hidden = false;
-      // ponytail: el boton de WhatsApp solo aparece cuando el CP queda fuera
-      // del rango de entrega (Alek 2026-08-29). Dentro del rango se paga en linea.
+      // ponytail: el boton de WhatsApp solo aparece cuando el pedido no se puede
+      // cobrar en linea — por CP fuera de zona o por pasar de una van (Alek 2026-09-03).
       document.getElementById('wa').hidden = z.zona !== 'fuera';
       if (z.zona === 'fuera') {
         envio = null;
         caja.className = 'zona fuera';
-        caja.innerHTML = '<b>Ese código postal está fuera de nuestra zona de entrega automática.</b> Te entregamos igual, pero el envío se cotiza según destino y volumen. Escríbenos por WhatsApp y te pasamos el costo.';
+        caja.innerHTML = z.motivo === 'peso'
+          ? `<b>Tu pedido pesa más de ${MAX_KG} kg.</b> A ese volumen el envío ya no entra en una camioneta y lo cotizamos aparte, casi siempre más barato por metro. Escríbenos por WhatsApp y te pasamos el costo.`
+          : '<b>Ese código postal está fuera de nuestra zona de entrega automática.</b> Te entregamos igual, pero el envío se cotiza según destino y volumen. Escríbenos por WhatsApp y te pasamos el costo.';
       } else {
         envio = z.costo;
         caja.className = 'zona ok';

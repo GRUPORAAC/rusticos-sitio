@@ -225,6 +225,7 @@ const ent = plazo(p);
       const f = ficha.formatos.find((x) => x.codigo === (sel.dataset ? sel.dataset.codigo : ficha.formatos[0].codigo)) || ficha.formatos[0];
       window.carrito.agregar({
         codigo: f.codigo, nombre: ficha.nombre, url: ficha.url, foto: ficha.foto,
+        kg: f.kg || 0,   // lo usa el checkout para el corte de peso
         formato: f.formato,
         unidad: { M2: 'm²', ML: 'metro lineal', BULTO: 'bulto' }[String(f.unidad || '').toUpperCase()] || 'pieza',
         precio: f.precio_venta, plazo: ficha.plazo, cant: +cant.value,

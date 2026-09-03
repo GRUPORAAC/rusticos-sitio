@@ -6,7 +6,7 @@ titulo: Términos y condiciones
 # TÉRMINOS Y CONDICIONES
 
 **Bodega de Talavera**
-Última actualización: 29 de agosto de 2026
+Última actualización: 3 de septiembre de 2026
 
 ## 1. Producto artesanal: la variación es parte de la pieza
 
@@ -70,8 +70,6 @@ Si tu proyecto necesita volumen, escríbenos antes por WhatsApp: los tiempos y e
 - Debe haber **alguien mayor de edad para recibir y firmar**. Si no hay quien reciba, se reprograma la entrega y **el segundo viaje se cobra aparte**.
 - **Revisa el material al recibirlo.** Cualquier daño visible debe reportarse en ese momento, antes de firmar la entrega.
 
-
-
 ## 8. Formas de pago
 
 Aceptamos **Mercado Pago** (tarjetas de crédito y débito, meses sin intereses y pago en efectivo en OXXO) y **PayPal**.
@@ -82,21 +80,29 @@ Aceptamos **Mercado Pago** (tarjetas de crédito y débito, meses sin intereses 
 
 Si necesitas factura, indícalo **al momento de tu compra** y proporciónanos RFC, razón social, régimen fiscal y uso de CFDI. Las facturas se emiten dentro del mes en curso de la compra; **pasado el mes ya no es posible facturar**.
 
-## 10. Devoluciones y cancelaciones
+## 10. Devoluciones, cambios y cancelaciones
 
-Definida en el documento `POLITICA_DEVOLUCIONES_BODEGA.docx`. Resumen:
+Las reglas completas están en la página de **[devoluciones, cambios y cancelaciones](/devoluciones/)**, que forma parte de estos términos. En resumen:
 
 - **Error nuestro** (otro color, otro formato, cantidad incompleta) → reponemos y pagamos todo.
 - **Llegó roto** → se reporta al recibir, con foto, antes de firmar → reposición sin costo.
 - **Te arrepentiste o te sobró** → 5 días naturales, material sin instalar y en su empaque, tú pagas el envío de retorno.
-- **Producto sobre pedido** → no admite devolución por desistimiento: se fabricó para ti.
-- **Cancelación** → 100% antes de que salga a fabricación; después se retiene una parte.
+- **Producto bajo pedido** → no admite devolución por arrepentimiento: se fabricó a mano para ti.
+- **Cancelación** → 100% antes de que salga a fabricación; después se retiene el 30% del anticipo ya entregado al taller.
 
 Siempre te ofrecemos primero **cambio por otro producto o saldo a favor**; el reembolso en dinero sigue siendo tu derecho.
 
+## 11. Contacto y datos del responsable
 
-
-## 11. Contacto
-
-**WhatsApp:** +52 55 5414 7383
+**Responsable:** Federico Bernardo Ziehl Beltrán, persona física con actividad empresarial.
+**Domicilio:** Av. División del Norte 2604, San Diego Churubusco, Coyoacán, Ciudad de México, C.P. 04120.
+**WhatsApp:** [+52 55 5414 7383](https://wa.me/525554147383)
 **Correo:** info@bodegadetalavera.com
+
+## 12. Ley aplicable
+
+Estos términos se rigen por la **Ley Federal de Protección al Consumidor** y demás legislación mexicana aplicable al comercio electrónico.
+
+Si tienes una inconformidad, escríbenos primero: la resolvemos directamente en la mayoría de los casos. También puedes acudir a la **Procuraduría Federal del Consumidor (PROFECO)** — `gob.mx/profeco` · Teléfono del Consumidor 55 5568 8722 y 800 468 8722.
+
+Para cualquier controversia, las partes se someten a los tribunales competentes de la Ciudad de México.

@@ -9,30 +9,65 @@
  *  que usa la pagina. Si el CP queda fuera de zona no hay cobro en linea.
  */
 
-export const TARIFAS = { normal: 450, alta: 1150 };
+// ⚠️ COPIA DE src/lib/envio.js — las Functions no pueden importar de src/.
+// test_envio.mjs compara las dos tablas y FALLA si divergen. Si tocas una, toca la otra.
+export const MAX_KG = 1000;
 
-const ALTA = [
-  [57000, 57999], [53000, 53999], [56400, 56529], [52760, 52799],
-  [54000, 54199], [56610, 56619], [56330, 56369], [52900, 52999],
-  [56370, 56399], [56600, 56609], [56620, 56649], [56530, 56599],
-  [55000, 55599], [55700, 55739], [54900, 54999], [56100, 56269],
-  [54700, 54769],
+export const ANILLOS = [
+  ['Álvaro Obregón (poniente)', 1700, 1899, 750],
+  ['Benito Juárez', 3000, 3999, 350],
+  ['Coyoacán', 4000, 4999, 350],
+  ['Tlalpan', 14000, 14999, 350],
+  ['Álvaro Obregón', 1000, 1999, 500],
+  ['Cuauhtémoc', 6000, 6999, 500],
+  ['Iztacalco', 8000, 8999, 500],
+  ['Iztapalapa', 9000, 9999, 500],
+  ['Miguel Hidalgo', 11000, 11999, 500],
+  ['Xochimilco', 13000, 13999, 500],
+  ['Venustiano Carranza', 15000, 15999, 500],
+  ['Azcapotzalco', 2000, 2999, 750],
+  ['Cuajimalpa', 5000, 5999, 750],
+  ['Gustavo A. Madero', 7000, 7999, 750],
+  ['Magdalena Contreras', 10000, 10999, 750],
+  ['Tláhuac', 12000, 12999, 750],
+  ['Milpa Alta', 16000, 16999, 750],
+  ['Nezahualcóyotl', 57000, 57999, 1150],
+  ['Naucalpan de Juárez', 53000, 53999, 1150],
+  ['La Paz (Los Reyes)', 56400, 56529, 1150],
+  ['Huixquilucan', 52760, 52799, 1150],
+  ['Tlalnepantla de Baz', 54000, 54199, 1150],
+  ['Valle de Chalco', 56610, 56619, 1150],
+  ['Chimalhuacán', 56330, 56369, 1150],
+  ['Atizapán de Zaragoza', 52900, 52999, 1150],
+  ['Chicoloapan', 56370, 56399, 1150],
+  ['Chalco', 56600, 56609, 1150],
+  ['Chalco', 56620, 56649, 1150],
+  ['Ixtapaluca', 56530, 56599, 1150],
+  ['Ecatepec de Morelos', 55000, 55599, 1150],
+  ['Coacalco de Berriozábal', 55700, 55739, 1150],
+  ['Tultitlán', 54900, 54999, 1150],
+  ['Texcoco', 56100, 56269, 1150],
+  ['Cuautitlán Izcalli', 54700, 54769, 1150],
 ];
 
-export function envioDe(cp) {
-  const n = parseInt(String(cp || '').trim(), 10);
-  if (!/^\d{5}$/.test(String(cp || '').trim()) || isNaN(n)) return null;
-  if (n >= 1000 && n <= 16999) return TARIFAS.normal;
-  for (const [a, b] of ALTA) if (n >= a && n <= b) return TARIFAS.alta;
-  return null; // fuera de zona: se cotiza por WhatsApp, no se cobra en linea
+function anilloDe(cp) {
+  const s = String(cp ?? '').trim();
+  if (!/^\d{5}$/.test(s)) return null;
+  const n = parseInt(s, 10);
+  for (const a of ANILLOS) if (n >= a[1] && n <= a[2]) return a;
+  return null;
+}
+
+/** null = no se cobra en linea (CP fuera de zona, o pedido de mas de una van). */
+export function envioDe(cp, kilos = 0) {
+  const a = anilloDe(cp);
+  if (!a || kilos > MAX_KG) return null;
+  return a[3];
 }
 
 export function zonaDe(cp) {
-  const n = parseInt(String(cp || '').trim(), 10);
-  if (!/^\d{5}$/.test(String(cp || '').trim()) || isNaN(n)) return 'fuera';
-  if (n >= 1000 && n <= 16999) return 'normal';
-  for (const [a, b] of ALTA) if (n >= a && n <= b) return 'alta';
-  return 'fuera';
+  const a = anilloDe(cp);
+  return a ? a[0] : 'fuera';
 }
 
 /** @returns {{ok:true, items:Array, envio:number, total:number, zona:string} | {ok:false, error:string}} */
@@ -75,8 +110,11 @@ export async function validar(pedido, origen) {
     });
   }
 
-  const envio = envioDe(pedido?.cp);
-  if (envio === null) return { ok: false, error: 'cp_fuera_de_zona' };
+  // el corte de peso se evalua DESPUES de sumar los kilos de todas las lineas
+  const envio = envioDe(pedido?.cp, kilos);
+  if (envio === null) {
+    return { ok: false, error: envioDe(pedido?.cp) === null ? 'cp_fuera_de_zona' : 'pedido_muy_pesado' };
+  }
 
   const productos = Math.round(items.reduce((s, i) => s + i.precio * i.cant, 0) * 100) / 100;
   return {
