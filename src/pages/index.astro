@@ -163,9 +163,9 @@ const OBRA = [
     @media (max-width: 640px) { .hero-txt { padding: 96px 16px 84px; } }
 
     /* ---------------- escaparate en hilera ---------------- */
-    .escaparate { padding: 112px 0 76px; }
+    .escaparate { padding: 96px 0 64px; --alto-obra: clamp(300px, 46vh, 440px); }
     .escaparate h2 { font-size: clamp(24px, 3vw, 34px); margin: 0 0 6px; }
-    .escaparate .sub { margin: 0 0 46px; color: var(--tenue); }
+    .escaparate .sub { margin: 0 0 38px; color: var(--tenue); }
     .tira {
       display: flex; overflow-x: auto; scroll-snap-type: x proximity;
       padding: 6px 0 10px; scrollbar-width: none; -ms-overflow-style: none;
@@ -178,14 +178,14 @@ const OBRA = [
     }
     .pista figure {
       position: relative; margin: 0; scroll-snap-align: start;
-      flex: 0 0 auto;
+      flex: 0 0 calc(var(--alto-obra) * 4 / 5);
     }
-    /* Alek 2026-09-03: ninguna proporcion fija sirve — las tomas van de 0.56 a
-       1.05, asi que cualquier recuadro recorta algo. Se manda la ALTURA (atada
-       al viewport, por eso siempre cabe) y cada foto pone su propio ancho.
-       Sin object-fit: no se recorta un solo pixel. */
+    /* Alek 2026-09-03: TODAS DEL MISMO TAMANO, grandes, y que quepan en la
+       pantalla. Por eso el tamano se define por ALTURA (46vh, atada al
+       viewport) y la proporcion 4:5 saca el ancho: uniforme siempre, y nunca
+       mas alto de lo que da la pantalla. */
     .pista img {
-      height: clamp(190px, 32vh, 320px); width: auto; display: block;
+      width: 100%; height: var(--alto-obra); object-fit: cover; display: block;
       border-radius: var(--radio); background: #ece8e1;
       transition: filter .35s ease, transform .35s ease;
     }
