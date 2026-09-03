@@ -96,8 +96,11 @@ def clasificar(p):
         return ("cintilla", slug(p["formatos"][0]["formato"]))
 
     if cat == "Talavera":
-        if acab in ("Estriado / Petatillo", "Petatillo"):
-            return ("texturizado", "estriado-petatillo")
+        # La textura vive en TIPO_PIEZA, no en ACABADO: son dos texturas
+        # distintas y cada una tiene su foto por color (Alek 2026-09-03).
+        tp = p.get("tipo_pieza", "")
+        if tp in ("Estriado", "Petatillo"):
+            return ("texturizado", slug(tp))
         if acab == "Relieve":
             return ("relieve", "clasico")
         if acab == "Deslavado":

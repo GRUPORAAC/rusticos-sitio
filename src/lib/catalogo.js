@@ -112,7 +112,7 @@ export const ARBOL = [
   {
     slug: 'texturizado', nombre: 'Texturizado',
     lema: 'Estriado y petatillo: relieve fino en el liso.',
-    subs: [{ slug: 'estriado-petatillo', nombre: 'Estriado y Petatillo' }],
+    subs: [{ slug: 'estriado', nombre: 'Estriado' }, { slug: 'petatillo', nombre: 'Petatillo' }],
   },
   {
     slug: 'terminaciones', nombre: 'Terminaciones',
