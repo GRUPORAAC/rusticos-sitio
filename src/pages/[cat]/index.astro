@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Rejilla from '../../components/Rejilla.astro';
+import Tarjeta from '../../components/Tarjeta.astro';
 import { ARBOL, porCat, porSub } from '../../lib/catalogo.js';
 import Colores from '../../components/Colores.astro';
 import FAMS from '../../data/familias.json';
@@ -30,17 +30,20 @@ const unaSola = subs.length === 1;
       </nav>
     )}
 
-    {subs.map((s) => (
-      <section class="bloque">
-        {!unaSola && (
-          <h2 class="sub-t">
-            <a href={`/${c.slug}/${s.slug}/`}>{s.nombre}</a>
-            <a class="ver" href={`/${c.slug}/${s.slug}/`}>Ver los {s.items.length} →</a>
-          </h2>
-        )}
-        <Rejilla items={s.items} />
-      </section>
-    ))}
+    <div class="rejilla-cat">
+      {subs.map((s) => (
+        <>
+          {!unaSola && (
+            <h2 class="sub-t" data-sub={s.slug}>
+              <a href={`/${c.slug}/${s.slug}/`}>{s.nombre}</a>
+              <a class="ver" href={`/${c.slug}/${s.slug}/`}>Ver los {s.items.length} →</a>
+            </h2>
+          )}
+          {s.items.map((it) => <Tarjeta p={it} />)}
+        </>
+      ))}
+    </div>
+    <p class="vacio-filtro" hidden>No hay productos de ese color en esta categoría.</p>
   </div>
 
   <script define:vars={{ mapa: Object.fromEntries(items.map((p) => [p.url, p.colores])), fams: FAMS }}>
@@ -48,6 +51,16 @@ const unaSola = subs.length === 1;
   </script>
 
   <style>
+    .rejilla-cat {
+      display: grid; gap: 46px 32px;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    }
+    .rejilla-cat .sub-t { grid-column: 1 / -1; }
+    @media (max-width: 520px) {
+      .rejilla-cat { grid-template-columns: repeat(2, 1fr); gap: 30px 18px; }
+    }
+    .vacio-filtro { margin: 40px 0; color: var(--tenue); }
+
     .cab { padding: 18px 0 30px; }
     .cab h1 { font-size: clamp(30px, 4.5vw, 46px); font-weight: 700; }
     .cab p { margin: 10px 0 0; color: var(--tenue); font-size: 16px; }
@@ -59,7 +72,6 @@ const unaSola = subs.length === 1;
     }
     .subs a:hover { border-color: var(--indigo); color: var(--indigo); }
     .subs span { color: var(--tenue); font-size: 12px; }
-    .bloque { margin-bottom: 56px; }
     .sub-t {
       display: flex; align-items: baseline; justify-content: space-between;
       gap: 16px; margin-bottom: 18px; font-size: 20px; font-weight: 600;

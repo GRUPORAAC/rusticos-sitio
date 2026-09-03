@@ -69,7 +69,8 @@ def slug(*trozos) -> str:
 # Estructura decidida 2026-08-27/28. Fuera del lanzamiento (Alek 2026-08-29):
 # Loseta/Baldosa, Barro y la ficha suelta de Estriado/Petatillo.
 EXCLUIR_CATEGORIA = {"Loseta/Baldosa", "Barro"}
-EXCLUIR_ACABADO = {"Estriado / Petatillo"}
+# 2026-09-03 (Alek): se abren Cintilla y Texturizado (estriado/petatillo).
+EXCLUIR_ACABADO = set()
 
 # Formatos que NO se publican en la tienda. Se quitan SOLO del sitio: en el
 # catalogo siguen vivos y se siguen vendiendo en mostrador.
@@ -91,7 +92,12 @@ def clasificar(p):
     if cat in EXCLUIR_CATEGORIA or acab in EXCLUIR_ACABADO:
         return None
 
+    if cat == "Cintilla":
+        return ("cintilla", "deslavadas" if acab == "Deslavado" else "esmaltadas")
+
     if cat == "Talavera":
+        if acab in ("Estriado / Petatillo", "Petatillo"):
+            return ("texturizado", "estriado-petatillo")
         if acab == "Relieve":
             return ("relieve", "clasico")
         if acab == "Deslavado":

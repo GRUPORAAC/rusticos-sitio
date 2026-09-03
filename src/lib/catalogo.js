@@ -72,6 +72,19 @@ export const ARBOL = [
     ],
   },
   {
+    slug: 'cintilla', nombre: 'Cintilla',
+    lema: 'La franja que remata el muro.',
+    subs: [
+      { slug: 'esmaltadas', nombre: 'Esmaltadas' },
+      { slug: 'deslavadas', nombre: 'Deslavadas' },
+    ],
+  },
+  {
+    slug: 'texturizado', nombre: 'Texturizado',
+    lema: 'Estriado y petatillo: relieve fino en el liso.',
+    subs: [{ slug: 'estriado-petatillo', nombre: 'Estriado y Petatillo' }],
+  },
+  {
     slug: 'terminaciones', nombre: 'Terminaciones',
     lema: 'La pieza que cierra el muro.',
     subs: [

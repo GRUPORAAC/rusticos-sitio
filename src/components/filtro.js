@@ -4,7 +4,9 @@ export function montarFiltro(mapa, fams) {
   const fila = document.querySelector('.filtro-color');
   if (!fila) return;
   const tarjetas = [...document.querySelectorAll('.tarjeta')];
-  const bloques = [...document.querySelectorAll('.bloque')];
+  // La categoria pinta UNA sola rejilla: los encabezados de subcategoria son
+  // filas del grid. Se oculta el encabezado que se queda sin tarjetas visibles.
+  const encabezados = [...document.querySelectorAll('.sub-t[data-sub]')];
   const vacio = document.querySelector('.vacio-filtro');
   const btnQuitar = document.getElementById('quitar-filtro');
 
@@ -16,8 +18,13 @@ export function montarFiltro(mapa, fams) {
       const ok = color ? cs.includes(color) : fam ? cs.some((c) => fams[c] === fam) : true;
       t.hidden = !ok;
     });
-    bloques.forEach((bl) => {
-      bl.hidden = ![...bl.querySelectorAll('.tarjeta')].some((t) => !t.hidden);
+    encabezados.forEach((h) => {
+      let n = h.nextElementSibling, vivo = false;
+      while (n && !n.matches('.sub-t')) {
+        if (n.matches('.tarjeta') && !n.hidden) { vivo = true; break; }
+        n = n.nextElementSibling;
+      }
+      h.hidden = !vivo;
     });
     if (vacio) vacio.hidden = tarjetas.some((t) => !t.hidden);
   }
