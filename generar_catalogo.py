@@ -93,8 +93,7 @@ def clasificar(p):
         return None
 
     if cat == "Cintilla":
-        return ("cintilla", {"Deslavado": "deslavadas",
-                             "Mate": "mates"}.get(acab, "esmaltadas"))
+        return ("cintilla", slug(p["formatos"][0]["formato"]))
 
     if cat == "Talavera":
         if acab in ("Estriado / Petatillo", "Petatillo"):
@@ -240,7 +239,9 @@ def generar(xlsx: Path, salida: Path, fotos_dir: Path = None,
             # el formato no se vende, pero su FOTO sigue siendo la del modelo:
             # se guarda por si ningun formato publicable la trae (caso P10/P19).
             if fila[idx["FOTO"]]:
-                u = slug(fila[idx["ACABADO"]], fila[idx["PRODUCTO"]], fila[idx["COLOR"]])
+                u = slug(fila[idx["ACABADO"]], fila[idx["PRODUCTO"]], fila[idx["COLOR"]],
+                         fila[idx["FORMATO"]]
+                         if str(fila[idx["CATEGORIA"]] or "") == "Cintilla" else None)
                 fotos_sueltas.setdefault(u, str(fila[idx["FOTO"]]))
             continue
 
@@ -261,7 +262,11 @@ def generar(xlsx: Path, salida: Path, fotos_dir: Path = None,
             if len(crudas) > 1:
                 p["galeria"] = [normaliza_ruta_foto(x) for x in crudas[1:]]
             fotos.update(crudas)
-        p["url"] = slug(p.get("acabado"), p.get("producto"), p.get("color"))
+        # En cintilla el FORMATO es el producto, no una variante: un remate de
+        # 5x10 y uno de 10x20 son piezas distintas (Alek 2026-09-03). Por eso
+        # entra al slug y cada formato es su propia ficha.
+        p["url"] = slug(p.get("acabado"), p.get("producto"), p.get("color"),
+                        p.get("formato") if p.get("categoria") == "Cintilla" else None)
         productos.append(p)
 
     # ---- una FICHA por modelo+acabado+color; los formatos son variantes dentro

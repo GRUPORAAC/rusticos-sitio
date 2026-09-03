@@ -147,8 +147,10 @@ const ent = plazo(p);
 
     {sim.length > 0 && (
       <section class="cruce">
-        <h2>Productos similares</h2>
-        <p>Otros diseños de {sub?.nombre?.toLowerCase() || cat?.nombre?.toLowerCase()}.</p>
+        <h2>{p.cat === 'cintilla' ? 'El mismo color en otros anchos' : 'Productos similares'}</h2>
+        <p>{p.cat === 'cintilla'
+          ? 'La misma cintilla en los demás anchos.'
+          : `Otros diseños de ${sub?.nombre?.toLowerCase() || cat?.nombre?.toLowerCase()}.`}</p>
         <div class="rej">{sim.map((t) => <Tarjeta p={t} />)}</div>
       </section>
     )}

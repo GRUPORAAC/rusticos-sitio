@@ -19,7 +19,7 @@ export function bonito(s) {
 }
 
 /** El PRODUCTO trae prefijos que la navegacion ya dice. Se recortan. */
-const PREFIJOS = [/^DECORADO\s+/i, /^RELIEVE\s+/i, /^TERMINACION\s+/i, /^AZULEJO\s+/i];
+const PREFIJOS = [/^CINTILLA\s+/i, /^DECORADO\s+/i, /^RELIEVE\s+/i, /^TERMINACION\s+/i, /^AZULEJO\s+/i];
 export function nombreCorto(p) {
   let n = p.producto || '';
   for (const re of PREFIJOS) n = n.replace(re, '');
@@ -28,7 +28,8 @@ export function nombreCorto(p) {
 
 export const productos = bruto.map((p) => ({
   ...p,
-  nombre: nombreCorto(p),
+  nombre: nombreCorto(p) +
+    (p.cat === 'cintilla' ? ' ' + bonito(p.formatos[0].formato) : ''),
   foto: '/' + p.foto.replace(/^FOTOS PRODUCTOS\//i, 'fotos/'),
   galeria: (p.galeria || []).map((g) => '/' + g.replace(/^FOTOS PRODUCTOS\//i, 'fotos/')),
   desde: Math.min(...p.formatos.map((f) => f.precio_venta)),
@@ -80,9 +81,12 @@ export const ARBOL = [
     slug: 'cintilla', nombre: 'Cintilla',
     lema: 'La franja que remata el muro.',
     subs: [
-      { slug: 'esmaltadas', nombre: 'Esmaltadas' },
-      { slug: 'mates', nombre: 'Mate' },
-      { slug: 'deslavadas', nombre: 'Deslavadas' },
+      { slug: '5x10', nombre: '5 × 10 cm' },
+      { slug: '5x15', nombre: '5 × 15 cm' },
+      { slug: '5x20', nombre: '5 × 20 cm' },
+      { slug: '7-5x15', nombre: '7.5 × 15 cm' },
+      { slug: '7x20', nombre: '7 × 20 cm' },
+      { slug: '10x20', nombre: '10 × 20 cm' },
     ],
   },
   {
@@ -159,8 +163,16 @@ export function hermanos(p) {
     .sort((a, b) => a.nombre.localeCompare(b.nombre));
 }
 
-/** Productos similares: misma categoria y subcategoria, otro diseño. */
+/** Productos similares: misma categoria y subcategoria, otro diseño.
+ *  En cintilla la subcategoria ES el formato, asi que lo util no es "otro color
+ *  del mismo ancho" (eso ya lo da el selector de color) sino EL MISMO COLOR EN
+ *  LOS OTROS ANCHOS. */
 export function similares(p, n = 8) {
+  if (p.cat === 'cintilla')
+    return productos
+      .filter((x) => x.cat === 'cintilla' && x.url !== p.url &&
+                     x.acabado === p.acabado && x.color === p.color)
+      .sort((a, b) => a.desde - b.desde);
   return productos
     .filter((x) => x.cat === p.cat && x.sub === p.sub && x.url !== p.url)
     .sort((a, b) => a.nombre.localeCompare(b.nombre))
