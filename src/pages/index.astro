@@ -80,7 +80,7 @@ const OBRA = [
       <div class="pista" id="pista">
         {OBRA.map((o, i) => (
           <figure>
-            <img src={`/fotos/hero/${o.foto}.webp`} alt={o.pie} loading={i < 3 ? 'eager' : 'lazy'} width="900" height="1200" />
+            <img src={`/fotos/hero/${o.foto}.webp`} alt={o.pie} loading={i < 3 ? 'eager' : 'lazy'} />
             {o.url
               ? <a class="ver-prod" href={`/p/${o.url}/`}>Ver producto</a>
               : <span class="ver-prod pronto">Próximamente</span>}
@@ -178,12 +178,14 @@ const OBRA = [
     }
     .pista figure {
       position: relative; margin: 0; scroll-snap-align: start;
-      flex: 0 0 clamp(230px, 24vw, 300px);
+      flex: 0 0 auto;
     }
+    /* Alek 2026-09-03: ninguna proporcion fija sirve — las tomas van de 0.56 a
+       1.05, asi que cualquier recuadro recorta algo. Se manda la ALTURA (atada
+       al viewport, por eso siempre cabe) y cada foto pone su propio ancho.
+       Sin object-fit: no se recorta un solo pixel. */
     .pista img {
-      /* 4:5, no 3/4 ni 1:1 (Alek 2026-09-03, opcion A): 3/4 en tarjeta angosta
-         se leia como "spaghetti"; 4:5 mas ancha casi no recorta la escena. */
-      width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block;
+      height: clamp(190px, 32vh, 320px); width: auto; display: block;
       border-radius: var(--radio); background: #ece8e1;
       transition: filter .35s ease, transform .35s ease;
     }
