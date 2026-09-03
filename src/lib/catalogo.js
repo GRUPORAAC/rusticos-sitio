@@ -147,3 +147,14 @@ export function similares(p, n = 8) {
     .sort((a, b) => a.nombre.localeCompare(b.nombre))
     .slice(0, n);
 }
+
+/** Azulejo liso <-> decorado que comparten color. El liso y el dibujo se
+ *  instalan juntos, asi que cada ficha recomienda el complemento del otro lado. */
+export function combinaCon(p, n = 8) {
+  const destino = { azulejo: 'decorados', decorados: 'azulejo' }[p.cat];
+  if (!destino || !p.colores.length) return [];
+  return productos
+    .filter((x) => x.cat === destino && x.colores.some((c) => p.colores.includes(c)))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre))
+    .slice(0, n);
+}

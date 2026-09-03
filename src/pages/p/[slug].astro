@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Tarjeta from '../../components/Tarjeta.astro';
-import { productos, ARBOL, pesos, terminacionesDe, hermanos, similares, medida, plazo, COLORES } from '../../lib/catalogo.js';
+import { productos, ARBOL, pesos, terminacionesDe, hermanos, similares, combinaCon, medida, plazo, COLORES } from '../../lib/catalogo.js';
 
 export function getStaticPaths() {
   return productos.map((p) => ({ params: { slug: p.url }, props: { p } }));
@@ -12,6 +12,7 @@ const sub = cat?.subs.find((s) => s.slug === p.sub);
 const otros = hermanos(p);
 const term = terminacionesDe(p).slice(0, 12);
 const sim = similares(p);
+const combina = combinaCon(p);
 const fotos = [p.foto, ...p.galeria];
 const uni = (u) =>
   ({ M2: 'm²', ML: 'metro lineal', BULTO: 'bulto' }[String(u || '').toUpperCase()] || 'pieza');
@@ -133,6 +134,16 @@ const ent = plazo(p);
         </div>
       </div>
     </div>
+
+    {combina.length > 0 && (
+      <section class="cruce">
+        <h2>{p.cat === 'azulejo' ? 'Decorados en este color' : 'Azulejo liso en este color'}</h2>
+        <p>{p.cat === 'azulejo'
+          ? `Dibujos que combinan con ${p.color?.toLowerCase()}: se instalan sobre el mismo muro.`
+          : `El liso que acompaña a este dibujo, en ${p.color?.toLowerCase()}.`}</p>
+        <div class="rej">{combina.map((t) => <Tarjeta p={t} />)}</div>
+      </section>
+    )}
 
     {sim.length > 0 && (
       <section class="cruce">

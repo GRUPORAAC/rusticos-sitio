@@ -17,44 +17,40 @@ const cats = ARBOL.map((c) => {
 });
 const total = productos.length;
 
-// Fotos de obra propias de RAAC (carpeta HERO BT). Solo las que traen tipo de
-// pieza, color y acomodo en el nombre; el resto son referencia interna.
+// ---------------------------------------------------------------- HERO Y OBRA
+// Fotos propias de RAAC (carpeta HERO BT). `url` = ficha a la que lleva la foto.
+// Las cintillas todavia NO se venden en linea (no estan en el ARBOL), asi que van
+// sin liga. ponytail: cuando exista la cintilla Verde Especial, ponle aqui su slug.
+const HERO = {
+  foto: 'cintilla-verde-especial-en-espiga',
+  pie: 'Cintilla verde especial, colocada en espiga',
+  url: null,
+};
 const OBRA = [
-  ['arlequin-verde-y-cintillas-blanco-y-verde', 'Arlequín verde con cintillas blanco y verde'],
-  ['cintilla-rojo-brillante-en-espiga', 'Cintilla rojo brillante en espiga'],
-  ['escamas-azul-deslavado', 'Escamas azul deslavado'],
-  ['azulejo-vino', 'Azulejo vino'],
-  ['cintilla-azul-deslavado-ladrillo', 'Cintilla azul deslavado en ladrillo'],
-  ['espanolita-jade', 'Españolita jade'],
-  ['cintilla-verde-especial-en-espiga', 'Cintilla verde especial en espiga'],
-  ['azulejo-verde-deslavado', 'Azulejo verde deslavado'],
-  ['cintilla-naranja', 'Cintilla naranja'],
-  ['azulejo-azul', 'Azulejo azul'],
-];
+  { foto: 'arlequin-verde-y-cintillas-blanco-y-verde', pie: 'Arlequín verde con cintillas blanco y verde', url: 'decorado-arlequin-verde' },
+  { foto: 'espanolita-jade', pie: 'Españolita jade', url: 'mate-espanolito-jade' },
+  { foto: 'escamas-azul-deslavado', pie: 'Escamas azul deslavado', url: 'deslavado-escama-azul-cobalto' },
+  { foto: 'azulejo-vino', pie: 'Azulejo vino', url: 'liso-vino' },
+  { foto: 'azulejo-verde-deslavado', pie: 'Azulejo verde deslavado', url: 'deslavado-verde' },
+  { foto: 'azulejo-azul', pie: 'Azulejo azul', url: 'especial-azul' },
+  { foto: 'cintilla-rojo-brillante-en-espiga', pie: 'Cintilla rojo brillante en espiga', url: null },
+  { foto: 'cintilla-azul-deslavado-ladrillo', pie: 'Cintilla azul deslavado en ladrillo', url: null },
+  { foto: 'cintilla-naranja', pie: 'Cintilla naranja', url: null },
+].filter((o) => !o.url || productos.some((x) => x.url === o.url));
 ---
 <Base>
   <section class="hero">
-    <div class="contenedor">
+    <img class="hero-foto" src={`/fotos/hero/${HERO.foto}.webp`} alt={HERO.pie} width="1200" height="1800" />
+    <div class="contenedor hero-txt">
       <h1>Talavera 100% mexicana,<br />a la puerta de tu casa.</h1>
       <p class="reta">¿Quién te dijo que la talavera era anticuada?</p>
-      <a class="cta" href="#categorias">Ver el catálogo</a>
+      {HERO.url
+        ? <a class="cta" href={`/p/${HERO.url}/`}>Ver este producto</a>
+        : <a class="cta" href="#categorias">Ver el catálogo</a>}
+      <p class="hero-pie">{HERO.pie}</p>
     </div>
   </section>
 
-  <section class="obra">
-    <div class="contenedor">
-      <h2>Así se ve instalado</h2>
-      <p>Trabajos hechos con material de Bodega de Talavera.</p>
-    </div>
-    <div class="tira-obra">
-      {OBRA.map(([f, alt], i) => (
-        <figure>
-          <img src={`/fotos/hero/${f}.webp`} alt={alt} loading={i < 2 ? 'eager' : 'lazy'} width="600" height="800" />
-          <figcaption>{alt}</figcaption>
-        </figure>
-      ))}
-    </div>
-  </section>
 
   <section class="contenedor" id="categorias">
     <div class="cuadricula">
@@ -75,6 +71,22 @@ const OBRA = [
     </div>
   </section>
 
+  <section class="escaparate">
+    <div class="contenedor">
+      <h2>Así se ve instalado</h2>
+      <p class="sub">Trabajos hechos con material de Bodega de Talavera.</p>
+    </div>
+    <div class="marco-obra" id="obra">
+      {OBRA.map((o, i) => (
+        <figure class={i === 0 ? 'on' : ''}>
+          <img src={`/fotos/hero/${o.foto}.webp`} alt={o.pie} loading={i === 0 ? 'eager' : 'lazy'} width="1200" height="1600" />
+          {o.url && <a class="ver-prod" href={`/p/${o.url}/`}>Ver producto</a>}
+        </figure>
+      ))}
+      <p class="pie-obra" id="pie-obra">{OBRA[0]?.pie}</p>
+    </div>
+  </section>
+
   <section class="franja">
     <div class="contenedor tres">
       <div><b>{total} productos</b><span>Con foto y precio, listos para pedir.</span></div>
@@ -83,6 +95,27 @@ const OBRA = [
     </div>
   </section>
 
+
+  <script>
+    // Escaparate: una foto cada 7 s. Al pasar el puntero se detiene, la foto se
+    // difumina y aparece "Ver producto". ponytail: sin libreria.
+    const marco = document.getElementById('obra');
+    if (marco) {
+      const figs = [...marco.querySelectorAll('figure')];
+      const pie = document.getElementById('pie-obra');
+      const pies = figs.map((f) => f.querySelector('img').alt);
+      let i = 0, reloj = null;
+      const pintar = () => {
+        figs.forEach((f, n) => f.classList.toggle('on', n === i));
+        if (pie) pie.textContent = pies[i];
+      };
+      const correr = () => { reloj = setInterval(() => { i = (i + 1) % figs.length; pintar(); }, 7000); };
+      const parar = () => { clearInterval(reloj); reloj = null; };
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && figs.length > 1) correr();
+      marco.addEventListener('pointerenter', parar);
+      marco.addEventListener('pointerleave', () => { if (!reloj) correr(); });
+    }
+  </script>
   <script>
     // Escritorio: rota ~1.5s y se CONGELA en la estrella al pasar el puntero.
     // Movil (sin puntero fino): rota sola a 3.5s y un tap entra a la categoria.
@@ -111,6 +144,43 @@ const OBRA = [
   </script>
 
   <style>
+    .hero { position: relative; isolation: isolate; overflow: hidden; }
+    .hero-foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+    .hero::after {
+      content: ''; position: absolute; inset: 0; z-index: -1;
+      background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35) 45%, rgba(0,0,0,.6));
+    }
+    .hero-txt { position: relative; color: #fff; padding: 96px 16px 84px; }
+    .hero-txt h1, .hero-txt .reta { color: #fff; }
+    .hero-pie { margin: 18px 0 0; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; opacity: .8; }
+    @media (max-width: 640px) { .hero-txt { padding: 64px 16px 56px; } }
+
+    .escaparate { padding: 56px 0 8px; }
+    .escaparate h2 { font-size: clamp(24px, 3vw, 34px); margin: 0 0 4px; }
+    .escaparate .sub { margin: 0 0 20px; color: var(--tenue); }
+    .marco-obra {
+      position: relative; max-width: 1100px; margin: 0 auto;
+      aspect-ratio: 4 / 3; border-radius: var(--radio); overflow: hidden; background: #ece8e1;
+    }
+    .marco-obra figure { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity .9s ease; }
+    .marco-obra figure.on { opacity: 1; }
+    .marco-obra img { width: 100%; height: 100%; object-fit: cover; display: block; transition: filter .35s ease, transform .35s ease; }
+    .ver-prod {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%) scale(.96);
+      padding: 13px 26px; border-radius: 999px; background: #fff; color: var(--carbon);
+      font-weight: 600; font-size: 15px; opacity: 0; pointer-events: none;
+      transition: opacity .3s ease, transform .3s ease; z-index: 3;
+    }
+    .marco-obra:hover figure.on img { filter: blur(6px) brightness(.82); transform: scale(1.03); }
+    .marco-obra:hover figure.on .ver-prod { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%) scale(1); }
+    .pie-obra {
+      position: absolute; left: 0; right: 0; bottom: 0; margin: 0; z-index: 2;
+      padding: 34px 20px 14px; font-size: 14px; color: #fff;
+      background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.6));
+    }
+    @media (max-width: 640px) { .marco-obra { aspect-ratio: 3 / 4; border-radius: 0; } }
+    @media (hover: none) { .marco-obra figure.on .ver-prod { opacity: 1; pointer-events: auto; top: auto; bottom: 60px; transform: translateX(-50%); } }
+
     .hero { padding: 92px 0 78px; }
     .hero h1 { font-size: clamp(34px, 5.6vw, 64px); font-weight: 700; letter-spacing: -0.035em; }
     .reta {
@@ -149,19 +219,5 @@ const OBRA = [
     @media (max-width: 760px) { .tres { grid-template-columns: 1fr; gap: 22px; } }
   </style>
   <style>
-    .obra { padding: 28px 0 8px; }
-    .obra h2 { margin: 0 0 4px; }
-    .obra > .contenedor > p { margin: 0 0 14px; color: #6b6b6b; }
-    .tira-obra {
-      display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory;
-      padding: 2px 16px 14px; -webkit-overflow-scrolling: touch;
-    }
-    .tira-obra figure { margin: 0; flex: 0 0 240px; scroll-snap-align: start; }
-    .tira-obra img {
-      width: 100%; height: 300px; object-fit: cover; display: block;
-      border-radius: var(--radio); background: #eee;
-    }
-    .tira-obra figcaption { font-size: 12px; color: #6b6b6b; padding: 6px 2px 0; }
-    @media (min-width: 900px) { .tira-obra figure { flex-basis: 280px; } .tira-obra img { height: 360px; } }
   </style>
 </Base>
