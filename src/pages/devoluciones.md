@@ -60,13 +60,18 @@ Siempre que proceda una devolución te ofrecemos primero **el cambio por otro pr
 
 ## 4. Cancelaciones
 
-Lo que manda no es la fecha de tu compra, sino **si el pedido ya salió al taller**.
+Lo que manda no es la fecha de tu compra, sino **si tus piezas ya se le pidieron al taller**.
 
-| Cuándo cancelas | Qué te devolvemos |
-|---|---|
-| Antes de que el pedido salga a fabricación o surtido | **100%** |
-| Ya iniciada la fabricación de producto bajo pedido | **70%** — se retiene el 30% correspondiente al anticipo ya entregado al taller |
-| Ya despachado el envío | Se trata como el **caso C**: aplican sus condiciones y pagas el retorno |
+| Tu pedido | Cuándo cancelas | Qué te devolvemos |
+|---|---|---|
+| **En existencia** | Antes de que salga el envío | **100%** |
+| **Bajo pedido** | Antes de que lo pidamos al taller | **100%** |
+| **Bajo pedido** | Ya que se lo pedimos al taller | **70%** |
+| Cualquiera | Ya que salió el envío | Se trata como el **caso C**: aplican sus condiciones y pagas el retorno |
+
+**Ese 30% no es una multa.** Cubre lo que no se recupera cuando un pedido ya arrancó: la comisión que cobra la plataforma de pago, el manejo del material, y las piezas que le encargamos al taller a nombre tuyo y que pagamos completas por adelantado.
+
+**Si prefieres, te lo damos como saldo a favor por el 100%** y lo usas cuando quieras: ahí no pierdes nada.
 
 ## 5. Cómo se hace y en cuánto tiempo
 

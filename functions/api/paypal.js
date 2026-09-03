@@ -134,6 +134,7 @@ export async function onRequestPost({ request, env }) {
           // se reporta lo que PayPal cobro de verdad, no lo que el sitio esperaba
           total: cobrado || v.total,
           zona: v.zona, kilos: v.kilos,
+          acepto_en: v.acepto_en, version_terminos: v.version_terminos,
           nombre: p.nombre, correo: p.correo, telefono: p.telefono,
           calle: p.calle || p.direccion, colonia: p.colonia, referencias: p.referencias, cp: p.cp,
           descuadre: Math.abs(cobrado - v.total) > 0.01 ? v.total : null,

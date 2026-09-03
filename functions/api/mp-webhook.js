@@ -89,6 +89,7 @@ async function procesar(request, env) {
     total: Number(pago.transaction_amount || productos + envio),
     zona: m.zona || '',
     kilos: m.kilos || 0,
+    acepto_en: m.acepto_en || null, version_terminos: m.version_terminos || '',
     nombre: m.nombre || pago.payer?.first_name || '',
     correo: m.correo || pago.payer?.email || '',
     telefono: m.telefono || '',

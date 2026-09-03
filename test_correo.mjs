@@ -172,5 +172,43 @@ const pega = (cuerpo) => new Request('https://x.pages.dev/api/mp-webhook', {
     paso++; console.log('  ok · con CORREO_CLIENTE=si, el cliente recibe su confirmación');
   }
 
+  // ---- FOLIO Y REGISTRO DEL PEDIDO (Alek 2026-09-03) ----
+  {
+    const { nuevoFolio, avisarPedido, armarCorreo } = await import('./functions/api/_correo.js');
+
+    const f = nuevoFolio(new Date('2026-09-03T20:00:00Z'));
+    assert.match(f, /^BT-0903-[A-Z0-9]{6}$/, `folio con formato: ${f}`);
+    assert.equal(/[01OIL]/.test(f.slice(9)), false, 'el folio no trae caracteres ambiguos (0 O 1 I L)');
+    assert.notEqual(nuevoFolio(), nuevoFolio(), 'dos folios seguidos no se repiten');
+    paso++; console.log('  ok · el folio se dicta sin ambigüedad y no se repite');
+
+    const guardados = [];
+    const env = { ...ENV, SITIO: 'https://bodegadetalavera.com',
+      PEDIDOS: { put: async (k, v) => guardados.push([k, v]), get: async () => null } };
+    espiar([['api.resend.com', respOk({})]]);
+    await avisarPedido(env, {
+      metodo: 'PayPal', referencia: 'ABC', items: [{ nombre: 'Azulejo', cant: 2, precio: 500, codigo: 'A' }],
+      productos: 1000, envio: 350, total: 1350, zona: 'Coyoacán', nombre: 'Juan', correo: 'j@x.com', cp: '04120',
+      acepto_en: '2026-09-03T18:00:00Z', version_terminos: '2026-09-03',
+    });
+    assert.equal(guardados.length, 1, 'el pedido se guarda en el KV');
+    const g = JSON.parse(guardados[0][1]);
+    assert.equal(guardados[0][0], `pedido:${g.folio}`, 'la llave del KV es el folio');
+    assert.ok(g.fecha && g.items && g.acepto_en, 'se guarda el pedido COMPLETO, no un flag');
+    paso++; console.log('  ok · el pedido queda guardado en el KV con su folio');
+
+    const c = armarCorreo({ ...g, sitio: 'https://bodegadetalavera.com' });
+    assert.ok(c.asunto.startsWith(g.folio), 'el folio encabeza el asunto');
+    assert.match(c.html, /\/pedido\/\?f=BT-/, 'el correo lleva el link de seguimiento');
+    assert.match(c.texto, /CONSTANCIA DE ACEPTACION/, 'el correo lleva la constancia');
+    paso++; console.log('  ok · el correo lleva folio, link de seguimiento y constancia');
+
+    // sin KV el cobro no se cae: el registro es best-effort, como el aviso
+    espiar([['api.resend.com', respOk({})]]);
+    const r = await avisarPedido({ ...ENV, PEDIDOS: undefined }, { items: [], total: 0, nombre: 'X' });
+    assert.ok(r, 'sin KV, avisarPedido sigue devolviendo resultado');
+    paso++; console.log('  ok · sin el KV configurado, el pago sigue funcionando');
+  }
+
   console.log(`\n${paso} pruebas en verde\n`);
 })();

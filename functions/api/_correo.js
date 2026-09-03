@@ -53,10 +53,14 @@ export function armarCorreo(p) {
     zona = '', kilos = 0, nombre = '', correo = '', telefono = '',
     calle = '', colonia = '', referencias = '', cp = '', fecha = new Date(),
     descuadre = null, acepto_en = null, version_terminos = '',
+    folio = '', guardado = false, sitio = 'https://bodegadetalavera.com',
   } = p || {};
 
+  // `fecha` llega como Date desde las pruebas y como texto ISO desde el KV
+  const cuando = fecha instanceof Date ? fecha : new Date(fecha);
   const zonaTxt = ZONAS[zona] || zona || '—';
-  const asunto = `Pedido nuevo · ${pesos(total)} · ${zonaTxt} · ${nombre || 'sin nombre'}`;
+  const asunto = `${folio ? folio + ' · ' : ''}Pedido nuevo · ${pesos(total)} · ${zonaTxt} · ${nombre || 'sin nombre'}`;
+  const liga = folio ? `${sitio}/pedido/?f=${encodeURIComponent(folio)}` : '';
 
   const filas = items
     .map(
@@ -81,7 +85,7 @@ export function armarCorreo(p) {
   const html = `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;max-width:620px;margin:0 auto;color:#2E3641">
   <div style="background:#383188;color:#FDFAF3;padding:18px 20px;border-radius:8px 8px 0 0">
     <div style="font-size:19px;font-weight:700">Pedido nuevo — Bodega de Talavera</div>
-    <div style="font-size:13px;opacity:.85;margin-top:4px">${esc(fechaMx(fecha))}</div>
+    <div style="font-size:13px;opacity:.85;margin-top:4px">${esc(fechaMx(cuando))}</div>
   </div>
   <div style="border:1px solid #e6e2d8;border-top:0;border-radius:0 0 8px 8px;padding:20px;background:#FDFAF3">
 ${descuadre !== null && descuadre !== undefined
@@ -102,6 +106,8 @@ ${descuadre !== null && descuadre !== undefined
       <tbody>${filas}</tbody>
       <tfoot>
         ${total_('Productos', productos)}
+        ${total_('Subtotal', productos / 1.16)}
+        ${total_('IVA 16%', productos - productos / 1.16)}
         ${total_(`Envío (${esc(zonaTxt)})`, envio)}
         ${total_('TOTAL PAGADO', total, true)}
       </tfoot>
@@ -126,8 +132,9 @@ ${descuadre !== null && descuadre !== undefined
       <strong>Constancia:</strong> el cliente aceptó la variación de color del 5%, la merma del 5% por
       traslados y cortes, y los términos y condiciones versión <strong>${esc(version_terminos || '—')}</strong>
       el <strong>${acepto_en ? esc(fechaMx(new Date(acepto_en))) : '—'}</strong> (hora del servidor).
-      <em>Guarda este correo: es el registro de ese consentimiento.</em>
+      ${guardado ? '' : '<br><strong style="color:#F77759">OJO: este pedido NO se pudo guardar (falta el KV PEDIDOS). Guarda este correo.</strong>'}
     </p>
+    ${liga ? `<p style="font-size:13px;margin:14px 0 0"><a href="${liga}" style="color:#383188;font-weight:700">Ver el pedido ${esc(folio)} →</a></p>` : ''}
     <p style="font-size:12px;color:#8a8578;margin:10px 0 0">
       Confirmar disponibilidad y avisarle el plazo: <strong>5–7 días</strong> si está en existencia,
       <strong>15–25</strong> si va bajo pedido.
@@ -137,11 +144,13 @@ ${descuadre !== null && descuadre !== undefined
 
   const texto = [
     `PEDIDO NUEVO — Bodega de Talavera`,
-    fechaMx(fecha),
+    folio ? `Folio ${folio}` : null,
+    fechaMx(cuando),
     '',
     ...items.map((i) => `  ${cant(i.cant)} x ${i.nombre} ${i.formato || ''} [${i.codigo}] = ${pesos(i.precio * i.cant)}`),
     '',
-    `  Productos: ${pesos(productos)}`,
+    `  Subtotal: ${pesos(productos / 1.16)}`,
+    `  IVA 16%:  ${pesos(productos - productos / 1.16)}`,
     `  Envio (${zonaTxt}): ${pesos(envio)}`,
     `  TOTAL: ${pesos(total)}`,
     '',
@@ -156,6 +165,8 @@ ${descuadre !== null && descuadre !== undefined
     `PAGO`,
     `  ${metodo} · ${referencia}`,
     `  Peso aprox: ${kilos} kg`,
+    '',
+    liga ? `  Seguimiento: ${liga}` : null,
     '',
     `CONSTANCIA DE ACEPTACION`,
     `  Terminos version ${version_terminos || '—'}`,
@@ -191,10 +202,39 @@ async function mandar(env, { para, asunto, html, texto }) {
   }
 }
 
+/** Folio del pedido: BT-MMDD-XXXXXX.
+ *  El alfabeto no trae 0/O/1/I/L para que se pueda dictar por telefono sin dudas.
+ *  Los 6 caracteres al azar (~10^9) son lo que hace que el folio NO se pueda
+ *  adivinar: es la unica llave del link de seguimiento (Alek 2026-09-03). */
+export function nuevoFolio(fecha = new Date()) {
+  const A = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+  const mx = new Date(fecha.getTime() - 6 * 3600 * 1000); // CDMX = UTC-6
+  const dd = String(mx.getUTCMonth() + 1).padStart(2, '0') + String(mx.getUTCDate()).padStart(2, '0');
+  const r = crypto.getRandomValues(new Uint8Array(6));
+  return `BT-${dd}-${[...r].map((n) => A[n % A.length]).join('')}`;
+}
+
+/** Guarda el pedido. Es el REGISTRO; el correo es solo el aviso.
+ *  ponytail: el KV `PEDIDOS` ya existia (lo usa mp-webhook para no avisar dos
+ *  veces del mismo pago) — se guarda el pedido COMPLETO para que el dia que se
+ *  quiera D1 y reportes, migrar sea leer el KV y volcarlo. Sin KV el pago sigue
+ *  funcionando: un aviso (o un registro) nunca tumba un cobro. */
+async function guardar(env, pedido) {
+  if (!env?.PEDIDOS) return false;
+  try {
+    await env.PEDIDOS.put(`pedido:${pedido.folio}`, JSON.stringify(pedido));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 /** Avisa del pedido a RAAC y, si esta encendido, al cliente.
  *  Nunca lanza: el que la llama puede ignorar el resultado sin riesgo. */
 export async function avisarPedido(env, pedido) {
-  const { asunto, html, texto } = armarCorreo(pedido);
+  pedido = { ...pedido, folio: pedido.folio || nuevoFolio(), fecha: pedido.fecha || new Date().toISOString() };
+  pedido.guardado = await guardar(env, pedido);
+  const { asunto, html, texto } = armarCorreo({ ...pedido, sitio: env?.SITIO || 'https://bodegadetalavera.com' });
 
   const para = String(env.CORREO_AVISO || '')
     .split(',')

@@ -49,8 +49,11 @@ const pega = productos.filter((p) => p.cat === 'pegazulejo');
           <p id="plazo-aviso"></p>
         </div>
         <div class="totales">
-          <div class="fila"><span>Productos</span><b id="total">$0</b></div>
-          <div class="fila chico"><span>Envío</span><span>Se calcula al confirmar</span></div>
+          <div class="fila"><span>Subtotal</span><span id="sub">$0</span></div>
+          <div class="fila"><span>IVA 16%</span><span id="iva">$0</span></div>
+          <div class="fila"><span>Envío</span><span class="chico">Se calcula al confirmar</span></div>
+          <div class="fila total"><span>Total</span><b id="total">$0</b></div>
+          <p class="incluye">Los precios que ves ya incluyen IVA.</p>
           <a href="/pagar/" class="enviar">Continuar al pago</a>
           <button id="vaciar" class="vaciar">Vaciar carrito</button>
         </div>
@@ -83,7 +86,11 @@ const pega = productos.filter((p) => p.cat === 'pegazulejo');
         )
         .join('');
 
-      document.getElementById('total').textContent = pesos(window.carrito.total());
+      const conIva = window.carrito.total();
+      const { subtotal, iva } = window.desglosarIva(conIva);
+      document.getElementById('sub').textContent = pesos(subtotal);
+      document.getElementById('iva').textContent = pesos(iva);
+      document.getElementById('total').textContent = pesos(conIva);
 
       // El plazo del pedido lo marca el articulo mas lento.
       const lento = c.some((x) => (x.plazo || '').startsWith('15')) ;
@@ -149,6 +156,8 @@ const pega = productos.filter((p) => p.cat === 'pegazulejo');
     .notas p { font-size: 13px; color: var(--tenue); margin: 0 0 12px; }
     .notas b { color: var(--carbon); }
 
+    .totales .total { border-top: 1px solid var(--linea); margin-top: 8px; padding-top: 10px; font-size: 17px; }
+    .totales .incluye { font-size: 11px; color: var(--tenue); margin: 10px 0 0; }
     .totales { border: 1px solid var(--linea); border-radius: var(--radio); background: #fff; padding: 20px; height: fit-content; }
     .fila { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 12px; }
     .fila b { font-size: 22px; }

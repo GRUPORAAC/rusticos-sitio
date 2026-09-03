@@ -47,7 +47,8 @@ export async function onRequestPost({ request, env }) {
     auto_return: 'approved',
     statement_descriptor: 'BODEGA TALAVERA',
     // Todo lo que el aviso va a necesitar viaja en metadata: el webhook lo lee
-    // de vuelta del pago y no hace falta guardar el pedido en ningun lado.
+    // de vuelta del pago. El pedido se guarda en el KV al confirmarse el cobro
+    // (ver avisarPedido), no aqui: aqui todavia no hay dinero.
     metadata: {
       nombre: (pedido.nombre || '').slice(0, 120),
       correo: (pedido.correo || '').slice(0, 120),
@@ -61,6 +62,9 @@ export async function onRequestPost({ request, env }) {
       productos: v.productos,
       envio: v.envio,
       kilos: v.kilos,
+      // la constancia del consentimiento viaja al webhook con el pago
+      acepto_en: v.acepto_en,
+      version_terminos: v.version_terminos,
     },
     // A donde le avisa MP cuando el pago se aprueba (incluido el OXXO que se
     // paga horas despues). Sin esto el pedido no le llega a nadie.

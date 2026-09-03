@@ -28,7 +28,8 @@ Además, las pantallas no reproducen el color con exactitud. Si el tono es deter
 
 ## 3. Precios
 
-- Todos los precios están en **pesos mexicanos (MXN)**.
+- Todos los precios están en **pesos mexicanos (MXN)** y **ya incluyen el IVA**. El precio que ves en la ficha es el que pagas por ese producto.
+- En el carrito y al pagar verás el **desglose**: subtotal, IVA y envío.
 - El precio se muestra **por formato**, ya sea por pieza o por metro cuadrado según el producto. La unidad siempre aparece indicada en la ficha.
 - El costo de envío **no está incluido** en el precio del producto: se calcula y se muestra antes de que confirmes tu compra.
 - Los precios pueden cambiar sin previo aviso. El precio que aplica es el vigente al momento de confirmar tu pedido.
@@ -88,7 +89,7 @@ Las reglas completas están en la página de **[devoluciones, cambios y cancelac
 - **Llegó roto** → se reporta al recibir, con foto, antes de firmar → reposición sin costo.
 - **Te arrepentiste o te sobró** → 5 días naturales, material sin instalar y en su empaque, tú pagas el envío de retorno.
 - **Producto bajo pedido** → no admite devolución por arrepentimiento: se fabricó a mano para ti.
-- **Cancelación** → 100% antes de que salga a fabricación; después se retiene el 30% del anticipo ya entregado al taller.
+- **Cancelación** → **100%** mientras no le hayamos pedido tus piezas al taller (y siempre, si tu pedido estaba en existencia y no ha salido el envío); después se retiene el 30%. Siempre puedes tomarlo como **saldo a favor por el 100%**.
 
 Siempre te ofrecemos primero **cambio por otro producto o saldo a favor**; el reembolso en dinero sigue siendo tu derecho.
 

@@ -50,9 +50,11 @@ import { ANILLOS, MAX_KG } from '../lib/envio.js';
       <aside class="resumen">
         <h2>Tu pedido</h2>
         <div id="lineas"></div>
-        <div class="fila"><span>Productos</span><b id="sub">$0</b></div>
+        <div class="fila"><span>Subtotal</span><span id="sub">$0</span></div>
+        <div class="fila"><span>IVA 16%</span><span id="iva">$0</span></div>
         <div class="fila"><span>Envío</span><b id="env">—</b></div>
         <div class="fila total"><span>Total</span><b id="tot">$0</b></div>
+        <p class="mini">Los precios ya incluyen IVA. El envío se suma aparte.</p>
         <p id="plazo" class="plazo"></p>
 
         <div id="metodos">
@@ -112,7 +114,9 @@ import { ANILLOS, MAX_KG } from '../lib/envio.js';
 
     function pintarTotales() {
       const sub = window.carrito.total();
-      document.getElementById('sub').textContent = pesos(sub);
+      const d = window.desglosarIva(sub);
+      document.getElementById('sub').textContent = pesos(d.subtotal);
+      document.getElementById('iva').textContent = pesos(d.iva);
       document.getElementById('env').textContent = envio === null ? '—' : pesos(envio);
       document.getElementById('tot').textContent = pesos(sub + (envio || 0));
       const lento = carrito.some((x) => (x.plazo || '').startsWith('15'));

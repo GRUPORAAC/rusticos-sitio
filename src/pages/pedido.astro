@@ -1,0 +1,151 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base titulo="Seguimiento de tu pedido">
+  <div class="contenedor seg">
+    <h1>Tu pedido</h1>
+
+    <form id="buscar" class="buscar">
+      <label for="f">Escribe tu folio</label>
+      <div class="fila">
+        <input id="f" name="f" type="text" placeholder="BT-0903-K7M2QX" autocomplete="off" spellcheck="false" required />
+        <button type="submit" class="btn">Buscar</button>
+      </div>
+      <p class="mini">Viene en el correo de confirmación de tu compra.</p>
+    </form>
+
+    <p id="cargando" hidden>Buscando…</p>
+    <p id="error" class="aviso" hidden></p>
+
+    <div id="ficha" hidden>
+      <div class="cinta">
+        <div>
+          <p class="et">Folio</p>
+          <p class="folio" id="v-folio"></p>
+        </div>
+        <div>
+          <p class="et">Estado</p>
+          <p class="estado" id="v-estado"></p>
+        </div>
+      </div>
+
+      <table class="lineas">
+        <thead><tr><th>Producto</th><th class="num">Cant.</th><th class="num">Importe</th></tr></thead>
+        <tbody id="v-items"></tbody>
+        <tfoot>
+          <tr><td colspan="2">Subtotal</td><td class="num" id="v-sub"></td></tr>
+          <tr><td colspan="2">IVA 16%</td><td class="num" id="v-iva"></td></tr>
+          <tr><td colspan="2">Envío</td><td class="num" id="v-envio"></td></tr>
+          <tr class="tot"><td colspan="2">Total</td><td class="num" id="v-total"></td></tr>
+        </tfoot>
+      </table>
+
+      <p class="dato"><b>Fecha:</b> <span id="v-fecha"></span></p>
+      <p class="dato"><b>Pago:</b> <span id="v-metodo"></span></p>
+      <p class="dato" id="v-peso-l"><b>Peso aproximado:</b> <span id="v-peso"></span> kg</p>
+      <p class="dato constancia" id="v-const"></p>
+
+      <div class="siguiente">
+        <p><b>¿Qué sigue?</b> Confirmamos la disponibilidad de tus piezas y te escribimos por WhatsApp
+          para acordar el día de entrega. Si algo cambia, te avisamos antes.</p>
+        <a class="btn wa2" id="v-wa" target="_blank" rel="noopener">Preguntar por WhatsApp</a>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    const $ = (id) => document.getElementById(id);
+    const pesos = (n) => '$' + Number(n || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 });
+    const ERRORES = {
+      folio_invalido: 'Ese folio no tiene el formato correcto. Se ve así: BT-0903-K7M2QX.',
+      no_encontrado: 'No encontramos ese folio. Revisa que esté completo, tal como viene en tu correo.',
+      sin_registro: 'La consulta no está disponible en este momento. Escríbenos por WhatsApp y lo revisamos contigo.',
+    };
+
+    async function buscar(folio) {
+      $('ficha').hidden = true; $('error').hidden = true; $('cargando').hidden = false;
+      try {
+        const r = await fetch('/api/pedido?f=' + encodeURIComponent(folio));
+        const d = await r.json();
+        $('cargando').hidden = true;
+        if (d.error) {
+          $('error').textContent = ERRORES[d.error] || 'No pudimos consultar tu pedido.';
+          $('error').hidden = false;
+          return;
+        }
+        pintar(d);
+      } catch (e) {
+        $('cargando').hidden = true;
+        $('error').textContent = 'No pudimos consultar tu pedido. Inténtalo de nuevo.';
+        $('error').hidden = false;
+      }
+    }
+
+    function pintar(d) {
+      $('v-folio').textContent = d.folio;
+      $('v-estado').textContent = { confirmado: 'Pago confirmado' }[d.estado] || d.estado;
+      $('v-items').innerHTML = (d.items || [])
+        .map((i) => `<tr><td>${i.nombre || ''} ${i.formato || ''}</td><td class="num">${i.cant}</td><td class="num">${pesos(i.precio * i.cant)}</td></tr>`)
+        .join('');
+      const g = window.desglosarIva(d.productos);
+      $('v-sub').textContent = pesos(g.subtotal);
+      $('v-iva').textContent = pesos(g.iva);
+      $('v-envio').textContent = pesos(d.envio);
+      $('v-total').textContent = pesos(d.total);
+      $('v-metodo').textContent = d.metodo || '—';
+      $('v-fecha').textContent = d.fecha
+        ? new Date(d.fecha).toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' })
+        : '—';
+      $('v-peso-l').hidden = !d.kilos;
+      $('v-peso').textContent = d.kilos;
+      $('v-const').textContent = d.acepto_en
+        ? `Aceptaste los términos y condiciones (versión ${d.version_terminos}) el ${new Date(d.acepto_en).toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' })}.`
+        : '';
+      $('v-const').hidden = !d.acepto_en;
+      $('v-wa').href = 'https://wa.me/525554147383?text=' +
+        encodeURIComponent(`Hola, quiero preguntar por mi pedido ${d.folio}.`);
+      $('ficha').hidden = false;
+    }
+
+    $('buscar').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const v = $('f').value.trim().toUpperCase();
+      if (v) { history.replaceState(null, '', '/pedido/?f=' + encodeURIComponent(v)); buscar(v); }
+    });
+
+    // el link del correo trae el folio: se busca solo
+    const inicial = new URLSearchParams(location.search).get('f');
+    if (inicial) { $('f').value = inicial.toUpperCase(); buscar(inicial.trim().toUpperCase()); }
+  </script>
+
+  <style>
+    .seg { max-width: 720px; padding-top: 30px; }
+    .seg h1 { font-size: clamp(28px, 4vw, 38px); margin-bottom: 22px; }
+    .buscar { margin-bottom: 30px; }
+    .buscar label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+    .buscar .fila { display: flex; gap: 10px; }
+    .buscar input {
+      flex: 1; padding: 12px 14px; font: inherit; font-size: 16px; letter-spacing: 0.06em;
+      border: 1px solid var(--linea); border-radius: var(--radio); background: #fff; text-transform: uppercase;
+    }
+    .buscar .btn { padding: 0 22px; background: var(--indigo); color: #fff; border: 0; border-radius: 999px; font-weight: 600; cursor: pointer; }
+    .mini { font-size: 12px; color: var(--tenue); margin-top: 8px; }
+    .aviso { background: #fff; border: 1px solid var(--coral); border-left-width: 3px; border-radius: var(--radio); padding: 14px 16px; font-size: 14px; }
+    .cinta { display: flex; gap: 40px; padding: 18px 20px; background: #fff; border: 1px solid var(--linea); border-radius: var(--radio); margin-bottom: 24px; flex-wrap: wrap; }
+    .et { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--tenue); margin: 0 0 4px; }
+    .folio { font-size: 20px; font-weight: 700; letter-spacing: 0.06em; margin: 0; }
+    .estado { font-size: 20px; font-weight: 700; margin: 0; color: #3e7d3a; }
+    .lineas { width: 100%; border-collapse: collapse; margin-bottom: 22px; font-size: 14px; }
+    .lineas th, .lineas td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--linea); }
+    .lineas th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--tenue); }
+    .lineas .num { text-align: right; }
+    .lineas tfoot td { border-bottom: 0; padding-top: 6px; color: var(--tenue); }
+    .lineas tfoot .tot td { font-weight: 700; font-size: 17px; color: var(--carbon); padding-top: 12px; }
+    .dato { font-size: 14px; margin: 6px 0; }
+    .constancia { font-size: 12px; color: var(--tenue); margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--linea); }
+    .siguiente { margin-top: 30px; padding: 20px; background: #fff; border: 1px solid var(--linea); border-radius: var(--radio); }
+    .siguiente p { font-size: 14px; margin: 0 0 14px; line-height: 1.6; }
+    .siguiente .btn { display: inline-block; padding: 11px 20px; border-radius: 999px; font-weight: 600; }
+    @media (max-width: 560px) { .buscar .fila { flex-direction: column; } .buscar .btn { padding: 13px; } }
+  </style>
+</Base>
