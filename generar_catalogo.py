@@ -114,14 +114,11 @@ def clasificar(p):
         g = p["formatos"][0]["codigo"][2]
         return ("decorados", GRUPO_DECORADO.get(g, "sencillo"))
 
-    if cat == "Azulejo Plano No Cuadrado (Forma)":
-        nom = p.get("producto", "").upper()
-        for clave, sub in (("HEXAGONITO", "hexagonito"),
-                           ("ESPAÑOL", "espanolito"), ("ESPANOL", "espanolito"),
-                           ("ESCAMA", "escama")):
-            if clave in nom:
-                return ("boutique", sub)
-        return ("boutique", "otros")
+    # Cada FORMA es su propia subcategoria (Alek 2026-09-03): Española no es
+    # Españolito, ni Hexágono es Hexagonito ni Hexágono Concha.
+    if cat in ("Azulejo Plano No Cuadrado (Forma)",
+               "Azulejo Texturizado No Cuadrado (Forma)"):
+        return ("boutique", slug(p.get("modelo")) or "otros")
 
     if cat.startswith("Terminacion"):
         tp = p.get("tipo_pieza", "")

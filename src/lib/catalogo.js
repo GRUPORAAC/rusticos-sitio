@@ -68,7 +68,12 @@ export const ARBOL = [
     subs: [
       { slug: 'escama', nombre: 'Escama' },
       { slug: 'espanolito', nombre: 'Españolito' },
+      { slug: 'espanola', nombre: 'Española' },
       { slug: 'hexagonito', nombre: 'Hexagonito' },
+      { slug: 'hexagono', nombre: 'Hexágono' },
+      { slug: 'hexagono-concha', nombre: 'Hexágono Concha' },
+      { slug: 'gota', nombre: 'Gota' },
+      { slug: 'hoja', nombre: 'Hoja' },
     ],
   },
   {
