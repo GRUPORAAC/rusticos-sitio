@@ -3,7 +3,7 @@ import { pesos, COLORES, uni } from '../lib/catalogo.js';
 const { p } = Astro.props;
 const unidad = uni(p.formatos[0].unidad);
 ---
-<a class="tarjeta" href={`/p/${p.url}/`}>
+<a class:list={['tarjeta', p.cat === 'cintilla' && 'entera']} href={`/p/${p.url}/`}>
   <div class="foto">
     <img src={p.foto} alt={p.nombre} loading="lazy" width="600" height="600" />
     {p.foto_generica && p.colores.length > 0 && (
@@ -25,6 +25,9 @@ const unidad = uni(p.formatos[0].unidad);
     background: #fff; border: 1px solid var(--linea);
   }
   .foto img { width: 100%; height: 100%; object-fit: cover; transition: transform .45s ease; }
+  /* La cintilla es una tira alta y angosta: recortada al cuadro no se entiende.
+     Se muestra completa (Alek 2026-09-03). */
+  .tarjeta.entera .foto img { object-fit: contain; padding: 10px; }
   .tarjeta:hover .foto img { transform: scale(1.04); }
   .txt { padding: 16px 2px 0; }
   .nom { margin: 0; font-size: 14px; font-weight: 500; line-height: 1.3; }

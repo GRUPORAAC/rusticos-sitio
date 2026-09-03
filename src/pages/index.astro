@@ -163,9 +163,9 @@ const OBRA = [
     @media (max-width: 640px) { .hero-txt { padding: 96px 16px 84px; } }
 
     /* ---------------- escaparate en hilera ---------------- */
-    .escaparate { padding: 96px 0 40px; }
+    .escaparate { padding: 112px 0 76px; }
     .escaparate h2 { font-size: clamp(24px, 3vw, 34px); margin: 0 0 6px; }
-    .escaparate .sub { margin: 0 0 34px; color: var(--tenue); }
+    .escaparate .sub { margin: 0 0 46px; color: var(--tenue); }
     .tira {
       display: flex; overflow-x: auto; scroll-snap-type: x proximity;
       padding: 6px 0 10px; scrollbar-width: none; -ms-overflow-style: none;
@@ -173,19 +173,21 @@ const OBRA = [
     }
     .tira::-webkit-scrollbar { display: none; }
     .pista {
-      display: flex; gap: 26px; padding: 0 max(16px, calc((100vw - 1200px) / 2));
+      display: flex; gap: 34px; padding: 0 max(16px, calc((100vw - 1200px) / 2));
       transition: transform .18s cubic-bezier(.2,.8,.3,1); will-change: transform;
     }
     .pista figure {
       position: relative; margin: 0; scroll-snap-align: start;
-      flex: 0 0 clamp(160px, 17vw, 215px);
+      flex: 0 0 clamp(200px, 20vw, 262px);
     }
     .pista img {
-      width: 100%; aspect-ratio: 3 / 4; object-fit: cover; display: block;
+      /* 1:1, no 3/4: las tomas son verticales y al cuadro conservan TODO el
+         ancho de la escena, solo pierden techo y piso (Alek 2026-09-03). */
+      width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
       border-radius: var(--radio); background: #ece8e1;
       transition: filter .35s ease, transform .35s ease;
     }
-    .pista figcaption { font-size: 12px; color: var(--tenue); padding: 10px 2px 0; }
+    .pista figcaption { font-size: 12px; color: var(--tenue); padding: 14px 2px 0; }
     .ver-prod {
       position: absolute; left: 50%; top: calc(50% - 18px);
       transform: translate(-50%, -50%) scale(.96);
