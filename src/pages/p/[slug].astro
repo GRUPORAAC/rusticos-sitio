@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Tarjeta from '../../components/Tarjeta.astro';
-import { productos, ARBOL, pesos, terminacionesDe, hermanos, similares, combinaCon, medida, plazo, COLORES } from '../../lib/catalogo.js';
+import { productos, ARBOL, pesos, terminacionesDe, hermanos, similares, combinaCon, medida, plazo, ambiente, COLORES } from '../../lib/catalogo.js';
 
 export function getStaticPaths() {
   return productos.map((p) => ({ params: { slug: p.url }, props: { p } }));
@@ -13,7 +13,8 @@ const otros = hermanos(p);
 const term = terminacionesDe(p).slice(0, 12);
 const sim = similares(p);
 const combina = combinaCon(p);
-const fotos = [p.foto, ...p.galeria];
+// la galeria interna = fotos del producto + las tomas de obra que lo retratan
+const fotos = [...new Set([p.foto, ...p.galeria, ...ambiente(p)])];
 const uni = (u) =>
   ({ M2: 'm²', ML: 'metro lineal', BULTO: 'bulto' }[String(u || '').toUpperCase()] || 'pieza');
 const ent = plazo(p);

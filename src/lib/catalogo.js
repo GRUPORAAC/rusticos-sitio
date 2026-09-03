@@ -36,6 +36,26 @@ export const productos = bruto.map((p) => ({
   colores: (p.color || '').split('/').map((c) => c.trim()).filter(Boolean),
 }));
 
+/** Fotos de obra propias de RAAC (carpeta HERO BT). `url` = ficha que retratan.
+ *  Viven aqui, no en la home, porque la ficha del producto tambien las usa:
+ *  la foto instalada entra a SU galeria interna (Alek 2026-09-03). */
+export const OBRA = [
+  { foto: 'cintilla-rojo-brillante-en-espiga', pie: 'Cintilla rojo brillante, colocada en espiga', url: 'brillante-cintilla-rojo-5x20', portada: true },
+  { foto: 'arlequin-verde-y-cintillas-blanco-y-verde', pie: 'Arlequín verde con cintillas blanco y verde', url: 'decorado-arlequin-verde' },
+  { foto: 'espanolita-jade', pie: 'Españolita jade', url: 'mate-espanolito-jade' },
+  { foto: 'escamas-azul-deslavado', pie: 'Escamas azul deslavado', url: 'deslavado-escama-azul-cobalto' },
+  { foto: 'azulejo-vino', pie: 'Azulejo vino', url: 'liso-vino' },
+  { foto: 'azulejo-verde-deslavado', pie: 'Azulejo verde deslavado', url: 'deslavado-verde' },
+  { foto: 'azulejo-azul', pie: 'Azulejo azul', url: 'especial-azul' },
+  { foto: 'cintilla-verde-especial-en-espiga', pie: 'Cintilla verde especial en espiga', url: null },
+  { foto: 'cintilla-azul-deslavado-ladrillo', pie: 'Cintilla azul deslavado en ladrillo', url: null },
+  { foto: 'cintilla-naranja', pie: 'Cintilla naranja', url: null },
+].filter((o) => !o.url || productos.some((x) => x.url === o.url));
+
+/** Las fotos de obra que retratan ESTE producto, listas para su galeria. */
+export const ambiente = (p) =>
+  OBRA.filter((o) => o.url === p.url).map((o) => `/fotos/hero/${o.foto}.webp`);
+
 export const ARBOL = [
   {
     slug: 'azulejo', nombre: 'Azulejo',

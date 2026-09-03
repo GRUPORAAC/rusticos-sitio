@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { ARBOL, porCat, productos } from '../lib/catalogo.js';
+import { ARBOL, porCat, productos, OBRA } from '../lib/catalogo.js';
 
 // Miniatura rotativa: hasta 6 fotos por categoria. La PRIMERA es la estrella
 // (la que se congela al pasar el puntero en escritorio).
@@ -18,25 +18,9 @@ const cats = ARBOL.map((c) => {
 const total = productos.length;
 
 // ---------------------------------------------------------------- HERO Y OBRA
-// Fotos propias de RAAC (carpeta HERO BT). `url` = ficha a la que lleva la foto.
-// Las cintillas todavia NO se venden en linea (no estan en el ARBOL), asi que van
-// sin liga. ponytail: cuando exista la cintilla Verde Especial, ponle aqui su slug.
-const HERO = {
-  foto: 'cintilla-rojo-brillante-en-espiga',
-  pie: 'Cintilla rojo brillante, colocada en espiga',
-  url: null,
-};
-const OBRA = [
-  { foto: 'arlequin-verde-y-cintillas-blanco-y-verde', pie: 'Arlequín verde con cintillas blanco y verde', url: 'decorado-arlequin-verde' },
-  { foto: 'espanolita-jade', pie: 'Españolita jade', url: 'mate-espanolito-jade' },
-  { foto: 'escamas-azul-deslavado', pie: 'Escamas azul deslavado', url: 'deslavado-escama-azul-cobalto' },
-  { foto: 'azulejo-vino', pie: 'Azulejo vino', url: 'liso-vino' },
-  { foto: 'azulejo-verde-deslavado', pie: 'Azulejo verde deslavado', url: 'deslavado-verde' },
-  { foto: 'azulejo-azul', pie: 'Azulejo azul', url: 'especial-azul' },
-  { foto: 'cintilla-verde-especial-en-espiga', pie: 'Cintilla verde especial en espiga', url: null },
-  { foto: 'cintilla-azul-deslavado-ladrillo', pie: 'Cintilla azul deslavado en ladrillo', url: null },
-  { foto: 'cintilla-naranja', pie: 'Cintilla naranja', url: null },
-].filter((o) => !o.url || productos.some((x) => x.url === o.url));
+// OBRA vive en lib/catalogo.js: la ficha del producto tambien la usa.
+const HERO = OBRA.find((o) => o.portada) || OBRA[0];
+const TIRA = OBRA.filter((o) => o !== HERO);
 ---
 <Base>
   <section class="hero">
@@ -78,7 +62,7 @@ const OBRA = [
     </div>
     <div class="tira" id="tira">
       <div class="pista" id="pista">
-        {OBRA.map((o, i) => (
+        {TIRA.map((o, i) => (
           <figure>
             <img src={`/fotos/hero/${o.foto}.webp`} alt={o.pie} loading={i < 3 ? 'eager' : 'lazy'} />
             {o.url
@@ -163,7 +147,7 @@ const OBRA = [
     @media (max-width: 640px) { .hero-txt { padding: 96px 16px 84px; } }
 
     /* ---------------- escaparate en hilera ---------------- */
-    .escaparate { padding: 96px 0 64px; --alto-obra: clamp(300px, 46vh, 440px); }
+    .escaparate { padding: 96px 0 64px; --alto-obra: clamp(340px, 54vh, 520px); }
     .escaparate h2 { font-size: clamp(24px, 3vw, 34px); margin: 0 0 6px; }
     .escaparate .sub { margin: 0 0 38px; color: var(--tenue); }
     .tira {
