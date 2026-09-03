@@ -175,6 +175,8 @@ import { ANILLOS, MAX_KG } from '../lib/envio.js';
     function datosPedido() {
       return {
         items: carrito, zona,
+        // constancia del consentimiento: el servidor la valida y le pone SU hora
+        acepto: f.acepto.checked,
         nombre: f.nombre.value, correo: f.correo.value, telefono: f.telefono.value,
         direccion: `${f.calle.value}, ${f.colonia.value}. ${f.referencias.value}`, cp: f.cp.value,
         calle: f.calle.value, colonia: f.colonia.value, referencias: f.referencias.value,

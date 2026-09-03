@@ -52,7 +52,7 @@ export function armarCorreo(p) {
     metodo = 'Pago', referencia = '', items = [], productos = 0, envio = 0, total = 0,
     zona = '', kilos = 0, nombre = '', correo = '', telefono = '',
     calle = '', colonia = '', referencias = '', cp = '', fecha = new Date(),
-    descuadre = null,
+    descuadre = null, acepto_en = null, version_terminos = '',
   } = p || {};
 
   const zonaTxt = ZONAS[zona] || zona || '—';
@@ -123,7 +123,12 @@ ${descuadre !== null && descuadre !== undefined
     </table>
 
     <p style="font-size:12px;color:#8a8578;margin:20px 0 0;border-top:1px solid #e6e2d8;padding-top:12px">
-      El cliente aceptó la variación de color del 5% y la merma del 5% por traslados y cortes.
+      <strong>Constancia:</strong> el cliente aceptó la variación de color del 5%, la merma del 5% por
+      traslados y cortes, y los términos y condiciones versión <strong>${esc(version_terminos || '—')}</strong>
+      el <strong>${acepto_en ? esc(fechaMx(new Date(acepto_en))) : '—'}</strong> (hora del servidor).
+      <em>Guarda este correo: es el registro de ese consentimiento.</em>
+    </p>
+    <p style="font-size:12px;color:#8a8578;margin:10px 0 0">
       Confirmar disponibilidad y avisarle el plazo: <strong>5–7 días</strong> si está en existencia,
       <strong>15–25</strong> si va bajo pedido.
     </p>
@@ -151,6 +156,10 @@ ${descuadre !== null && descuadre !== undefined
     `PAGO`,
     `  ${metodo} · ${referencia}`,
     `  Peso aprox: ${kilos} kg`,
+    '',
+    `CONSTANCIA DE ACEPTACION`,
+    `  Terminos version ${version_terminos || '—'}`,
+    `  Aceptados el ${acepto_en ? fechaMx(new Date(acepto_en)) : '—'} (hora del servidor)`,
   ]
     .filter((l) => l !== null)
     .join('\n');

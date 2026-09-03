@@ -13,6 +13,11 @@
 // test_envio.mjs compara las dos tablas y FALLA si divergen. Si tocas una, toca la otra.
 export const MAX_KG = 1000;
 
+// Version de los terminos que el cliente esta aceptando. Cambiala cuando cambien
+// /terminos/ o /devoluciones/: la constancia dice QUE TEXTO acepto, no solo que
+// marco una casilla. (Alek 2026-09-03)
+export const VERSION_TERMINOS = '2026-09-03';
+
 export const ANILLOS = [
   ['Álvaro Obregón (poniente)', 1700, 1899, 750],
   ['Benito Juárez', 3000, 3999, 350],
@@ -116,9 +121,16 @@ export async function validar(pedido, origen) {
     return { ok: false, error: envioDe(pedido?.cp) === null ? 'cp_fuera_de_zona' : 'pedido_muy_pesado' };
   }
 
+  // CONSTANCIA DEL CONSENTIMIENTO (Alek 2026-09-03).
+  // Antes la casilla era solo un `required` de HTML: se quitaba con el inspector
+  // y el pedido pasaba igual. Ahora el servidor la EXIGE y la sella con SU reloj
+  // — la hora del navegador no sirve como constancia, cualquiera la cambia.
+  if (pedido?.acepto !== true) return { ok: false, error: 'terminos_no_aceptados' };
+  const acepto_en = new Date().toISOString();
+
   const productos = Math.round(items.reduce((s, i) => s + i.precio * i.cant, 0) * 100) / 100;
   return {
-    ok: true, items, envio, productos,
+    ok: true, items, envio, productos, acepto_en, version_terminos: VERSION_TERMINOS,
     total: Math.round((productos + envio) * 100) / 100,
     zona: zonaDe(pedido?.cp),
     kilos: Math.round(kilos * 100) / 100,
