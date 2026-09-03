@@ -163,34 +163,34 @@ const OBRA = [
     @media (max-width: 640px) { .hero-txt { padding: 96px 16px 84px; } }
 
     /* ---------------- escaparate en hilera ---------------- */
-    .escaparate { padding: 76px 0 10px; }
+    .escaparate { padding: 96px 0 40px; }
     .escaparate h2 { font-size: clamp(24px, 3vw, 34px); margin: 0 0 6px; }
-    .escaparate .sub { margin: 0 0 26px; color: var(--tenue); }
+    .escaparate .sub { margin: 0 0 34px; color: var(--tenue); }
     .tira {
       display: flex; overflow-x: auto; scroll-snap-type: x proximity;
-      padding: 4px 0 6px; scrollbar-width: none; -ms-overflow-style: none;
+      padding: 6px 0 10px; scrollbar-width: none; -ms-overflow-style: none;
       overscroll-behavior-x: contain;
     }
     .tira::-webkit-scrollbar { display: none; }
     .pista {
-      display: flex; gap: 18px; padding: 0 max(16px, calc((100vw - 1200px) / 2));
+      display: flex; gap: 26px; padding: 0 max(16px, calc((100vw - 1200px) / 2));
       transition: transform .18s cubic-bezier(.2,.8,.3,1); will-change: transform;
     }
     .pista figure {
       position: relative; margin: 0; scroll-snap-align: start;
-      flex: 0 0 clamp(230px, 27vw, 320px);
+      flex: 0 0 clamp(160px, 17vw, 215px);
     }
     .pista img {
       width: 100%; aspect-ratio: 3 / 4; object-fit: cover; display: block;
       border-radius: var(--radio); background: #ece8e1;
       transition: filter .35s ease, transform .35s ease;
     }
-    .pista figcaption { font-size: 13px; color: var(--tenue); padding: 10px 2px 0; }
+    .pista figcaption { font-size: 12px; color: var(--tenue); padding: 10px 2px 0; }
     .ver-prod {
       position: absolute; left: 50%; top: calc(50% - 18px);
       transform: translate(-50%, -50%) scale(.96);
-      padding: 12px 24px; border-radius: 999px; background: #fff; color: var(--carbon);
-      font-weight: 600; font-size: 14px; white-space: nowrap;
+      padding: 9px 18px; border-radius: 999px; background: #fff; color: var(--carbon);
+      font-weight: 600; font-size: 13px; white-space: nowrap;
       opacity: 0; pointer-events: none; z-index: 3;
       transition: opacity .3s ease, transform .3s ease;
     }
