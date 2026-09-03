@@ -81,6 +81,7 @@ export const ARBOL = [
     lema: 'La franja que remata el muro.',
     subs: [
       { slug: 'esmaltadas', nombre: 'Esmaltadas' },
+      { slug: 'mates', nombre: 'Mate' },
       { slug: 'deslavadas', nombre: 'Deslavadas' },
     ],
   },

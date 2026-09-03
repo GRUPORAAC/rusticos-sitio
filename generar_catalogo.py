@@ -93,7 +93,8 @@ def clasificar(p):
         return None
 
     if cat == "Cintilla":
-        return ("cintilla", "deslavadas" if acab == "Deslavado" else "esmaltadas")
+        return ("cintilla", {"Deslavado": "deslavadas",
+                             "Mate": "mates"}.get(acab, "esmaltadas"))
 
     if cat == "Talavera":
         if acab in ("Estriado / Petatillo", "Petatillo"):
@@ -283,12 +284,20 @@ def generar(xlsx: Path, salida: Path, fotos_dir: Path = None,
         f["formatos"].append({k: p[k] for k in
                               ("codigo", "formato", "precio_venta", "unidad", "pz_m2")
                               if k in p})
-        # la primera foto que aparezca en cualquier formato vale para la ficha
-        if "foto" in p and "foto" not in f:
-            f["foto"] = p["foto"]
-            if "galeria" in p:
-                f["galeria"] = p["galeria"]
+        # la primera foto que aparezca en cualquier formato es la portada; las
+        # de los demas formatos se acumulan en la galeria (cintillas 2026-09-03:
+        # hay una toma por formato y las 6 valen para la misma ficha)
+        if "foto" in p:
+            if "foto" not in f:
+                f["foto"] = p["foto"]
+                f["galeria"] = list(p.get("galeria", []))
+            else:
+                for g in [p["foto"], *p.get("galeria", [])]:
+                    if g != f["foto"] and g not in f["galeria"]:
+                        f["galeria"].append(g)
     for u, f in fichas.items():
+        if not f.get("galeria"):
+            f.pop("galeria", None)
         f["formatos"].sort(key=lambda x: x.get("precio_venta") or 0)
         if not f.get("foto") and u in fotos_sueltas:
             crudas = [x.strip() for x in fotos_sueltas[u].split("|") if x.strip()]
