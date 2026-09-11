@@ -1,229 +1,524 @@
 ---
 import Base from '../layouts/Base.astro';
-import { ARBOL, porCat, productos, OBRA } from '../lib/catalogo.js';
+import Flor from '../components/Flor.astro';
+import { GRUPOS_DEF, porGrupo, porCat, piezas, CONTACTO, waHref, telHref, portadas } from '../lib/catalogo.js';
+import SECUENCIAS from '../data/secuencias.json';
 
-// Miniatura rotativa: hasta 6 fotos por categoria. La PRIMERA es la estrella
-// (la que se congela al pasar el puntero en escritorio).
-const ESTRELLA = ['Blanco Mexicano', 'Azul Intermedio', 'Amarillo Liso', 'Verde Especial'];
-const cats = ARBOL.map((c) => {
-  const items = porCat(c.slug);
-  const estrella = items.find((p) => ESTRELLA.includes(p.color)) || items[0];
-  const resto = items.filter((p) => p !== estrella);
-  const fotos = [estrella, ...resto.filter((_, i) => i % Math.max(1, Math.floor(resto.length / 5)) === 0)]
-    .slice(0, 6)
-    .filter(Boolean)
-    .map((p) => p.foto);
-  return { ...c, fotos, n: items.length };
-});
-const total = productos.length;
+// Alek 2026-09-10: las secuencias ligadas al scroll NO se activan hasta tener
+// el material fotografico real. El motor (public/secuencia.js) y los textos
+// (src/data/secuencias.json) quedan listos; solo hay que poner esto en true.
+const SECUENCIAS_ACTIVAS = false;
 
-// ---------------------------------------------------------------- HERO Y OBRA
-// OBRA vive en lib/catalogo.js: la ficha del producto tambien la usa.
-const HERO = OBRA.find((o) => o.portada) || OBRA[0];
-const TIRA = OBRA.filter((o) => o !== HERO);
+// Una foto por grupo, completa (sin recortes) para las tarjetas del catalogo.
+const escoge = (cat, pref = []) => {
+  const items = porCat(cat);
+  return items.find((p) => pref.some((s) => p.nombre.toLowerCase().includes(s))) || items[0];
+};
+const PORTADA = {
+  'talavera': portadas('talavera-decorada', 1)[0],
+  // Alek 2026-09-10: la portada de Baño es la foto BAÑO.jpg de HERO RA (instalacion real)
+  'bano': { foto: '/fotos/hero-ra/bano.webp', nombre: 'Baño con talavera' },
+  'pisos': portadas('barro', 1)[0],
+  'piedra-y-cantera': portadas('piedra', 1)[0],
+  'techos': null,
+};
+const grupos = GRUPOS_DEF.map((g) => ({
+  ...g,
+  cats: porGrupo(g.nombre),
+  n: porGrupo(g.nombre).reduce((s, c) => s + porCat(c.slug).length, 0),
+  foto: PORTADA[g.slug]?.foto,
+}));
+// Foto principal: talavera y barro INSTALADOS (FOTOS PRODUCTOS/HERO RA -> public/fotos/hero-ra).
+// Foto principal fija: instalacion real (FOTOS PRODUCTOS/HERO RA -> public/fotos/hero-ra).
+const HERO = { foto: '/fotos/hero-ra/hero.webp', nombre: 'Cocina con talavera azul y blanco' };
+// Album "Así se ve instalado" (Alek 2026-09-10): un cuadro fijo donde las
+// fotos de instalacion pasan de pagina. Se muestran COMPLETAS (sin recorte)
+// dentro de un marco 4:5. Fuera image17 e image20: traen marca de agua ajena.
+const ALBUM = [
+  { foto: 'image9', pie: 'Pasillo de barro con cenefa de talavera' },
+  { foto: 'image11', pie: 'Escalera con peraltes de talavera' },
+  { foto: 'image14', pie: 'Fachada con marco de talavera en la puerta' },
+  { foto: 'image24', pie: 'Escalera exterior con peraltes decorados' },
+  { foto: 'image7', pie: 'Regadera en arco con talavera azul' },
+  { foto: 'image6', pie: 'Mesa de comedor con cenefa de talavera' },
+  { foto: 'image25', pie: 'Cocina con talavera azul y blanco' },
+  { foto: 'image5', pie: 'Cocina con talavera azul y amarillo' },
+  { foto: 'image13', pie: 'Arco con marco de talavera amarillo' },
+  { foto: 'image19', pie: 'Puerta con marco de talavera' },
+  { foto: 'image21', pie: 'Entrada con marco de talavera' },
+  { foto: 'image15', pie: 'Escalinata de barro y talavera' },
+];
+const NOS = escoge('talavera-decorada', ['collage azul']);
+
 ---
-<Base>
+<Base claseBody="home">
+  <!-- ================================================================ HERO -->
   <section class="hero">
-    <img class="hero-foto" src={`/fotos/hero/${HERO.foto}.webp`} alt={HERO.pie} width="1200" height="1800" />
-    <div class="contenedor hero-txt">
-      <h1>Talavera 100% mexicana,<br />a la puerta de tu casa.</h1>
-      <p class="reta">¿Quién te dijo que la talavera era anticuada?</p>
-      {HERO.url
-        ? <a class="cta" href={`/p/${HERO.url}/`}>Ver este producto</a>
-        : <a class="cta" href="#categorias">Ver el catálogo</a>}
-      <p class="hero-pie">{HERO.pie}</p>
+    <div class="contenedor hero-grid">
+      <div class="hero-txt">
+        <p class="ceja">{CONTACTO.descriptor}</p>
+        <h1>Talavera, barro, piedra y cantera <em>a la medida de tu proyecto</em>.</h1>
+        <p class="hero-p">Cuéntanos tu idea y te ayudamos a desarrollarla. Escríbenos por WhatsApp o mándanos tus medidas y te asesoramos.</p>
+        <div class="hero-cta">
+          <a class="boton" href="/catalogo/">Ver el catálogo</a>
+          <a class="boton hueco" href="/contacto/">Visítanos</a>
+        </div>
+        <p class="hero-dato"><Flor tam={12} /> {CONTACTO.direccionCorta}</p>
+      </div>
+      <figure class="hero-foto">
+        <img src={HERO.foto} alt={HERO.nombre} width="774" height="1400" fetchpriority="high" />
+        <figcaption>{HERO.nombre}</figcaption>
+      </figure>
     </div>
   </section>
 
-
-  <section class="contenedor cats" id="categorias">
-    <div class="cuadricula">
-      {cats.map((c) => (
-        <a class="cat" href={`/${c.slug}/`} data-rota>
-          <div class="marco">
-            {c.fotos.map((f, i) => (
-              <img src={f} alt="" class={i === 0 ? 'on' : ''} loading={i === 0 ? 'eager' : 'lazy'} width="600" height="600" />
-            ))}
-          </div>
-          <div class="cat-txt">
-            <h2>{c.nombre}</h2>
-            <p>{c.lema}</p>
-            <span>{c.n} {c.n === 1 ? 'producto' : 'productos'}</span>
-          </div>
-        </a>
-      ))}
+  <!-- =========================================================== PILARES -->
+  <section class="pilares">
+    <div class="contenedor tres">
+      <div><b>Talleres con criterio de calidad</b><span>Trabajamos con talleres de Dolores Hidalgo y Puebla: tradición con control de calidad en cada pieza.</span></div>
+      <div><b>Tienda física en Coyoacán</b><span>Ve el material en persona y llévate justo lo que necesitas. Sin sorpresas de color ni de textura.</span></div>
+      <div><b>Del baño a la fachada</b><span>Talavera, barro, piedra, cantera y teja. Para una remodelación o para un proyecto completo.</span></div>
     </div>
   </section>
 
-  <section class="escaparate">
+  <!-- ========================================================== CATALOGO -->
+  <section class="cats" id="catalogo">
     <div class="contenedor">
-      <h2>Así se ve instalado</h2>
-      <p class="sub">Trabajos hechos con material de Bodega de Talavera.</p>
-    </div>
-    <div class="tira" id="tira">
-      <div class="pista" id="pista">
-        {TIRA.map((o, i) => (
-          <figure>
-            <img src={`/fotos/hero/${o.foto}.webp`} alt={o.pie} loading={i < 3 ? 'eager' : 'lazy'} />
-            {o.url
-              ? <a class="ver-prod" href={`/p/${o.url}/`}>Ver producto</a>
-              : <span class="ver-prod pronto">Próximamente</span>}
-            <figcaption>{o.pie}</figcaption>
-          </figure>
+      <div class="cab-sec">
+        <p class="ceja">Catálogo</p>
+        <h2>¿Qué estás buscando?</h2>
+        <p class="sub">{piezas.length.toLocaleString('es-MX')} piezas con foto, organizadas de lo general a lo particular. Sin precios en línea: cada proyecto se cotiza en tienda, por WhatsApp o por correo.</p>
+      </div>
+      <div class="grupos">
+        {grupos.map((g) => (
+          <a class:list={['grupo', !g.n && 'pronto']} href={`/catalogo/${g.slug}/`}>
+            <div class="marco">
+              {g.foto
+                ? <img src={g.foto} alt="" loading="lazy" width="600" height="600" />
+                : <div class="marco-vacio"><img src="/icono.svg" alt="" width="120" height="80" /><span>Fotos en camino</span></div>}
+            </div>
+            <div class="grupo-txt">
+              <h3>{g.nombre}</h3>
+              <p>{g.lema}</p>
+              <ul>{g.cats.map((c) => <li>{c.nombre}</li>)}</ul>
+              <span>{g.n ? `${g.n} piezas` : 'Lo tenemos en tienda'} →</span>
+            </div>
+          </a>
         ))}
       </div>
     </div>
   </section>
 
-  <section class="franja">
-    <div class="contenedor tres">
-      <div><b>{total} productos</b><span>Con foto y precio, listos para pedir.</span></div>
-      <div><b>Entrega en CDMX y zona conurbada</b><span>El resto del país se cotiza por WhatsApp.</span></div>
-      <div><b>Hecho a mano, pieza por pieza</b><span>Variaciones de hasta 5%: así se ve lo artesanal.</span></div>
+  {SECUENCIAS_ACTIVAS && (
+    <>
+      <div class="sec-intro contenedor">
+        <p class="ceja centro der">Cómo se hace</p>
+        <h2>De barro a pieza terminada.</h2>
+        <p class="sub">Baja despacio: cada paso avanza con tu scroll.</p>
+      </div>
+      {SECUENCIAS.map((s, k) => (
+        <section class="sec" data-secuencia={`/secuencias/${s.id}/`} data-cuadros={s.cuadros} style="--largo: 3">
+          <div class="sec-pegado">
+            <canvas aria-hidden="true"></canvas>
+            <div class="sec-velo"></div>
+            <div class="sec-txt">
+              <p class="sec-num">{String(k + 1).padStart(2, '0')}</p>
+              <h2 class="sec-t">{s.titulo}</h2>
+              <div class="sec-capas">
+                {s.textos.map((t) => <p class="sec-capa" data-desde={t.desde} data-hasta={t.hasta}>{t.t}</p>)}
+              </div>
+              <p class="sec-barra" aria-hidden="true"><i></i></p>
+            </div>
+          </div>
+        </section>
+      ))}
+      <script is:inline>import('/secuencia.js').then((m) => m.montarSecuencias());</script>
+    </>
+  )}
+
+  <!-- =========================================================== EN OBRA -->
+  <!-- Libro abierto (Alek 2026-09-10): dos fotos juntas, la de la derecha
+       pasa de pagina sobre el lomo y cae sobre la izquierda. Fotos completas. -->
+  <section class="obra">
+    <div class="contenedor">
+      <div class="obra-cab">
+        <div>
+          <p class="ceja">Aplicado en obra</p>
+          <h2>Así se ve instalado.</h2>
+        </div>
+        <div class="obra-ctl">
+          <p class="obra-num"><b id="libro-num">1</b> / {Math.ceil(ALBUM.length / 2)}</p>
+          <button class="boton hueco chico" type="button" id="libro-atras" aria-label="Página anterior">← Anterior</button>
+          <button class="boton chico" type="button" id="libro-sig" aria-label="Página siguiente">Siguiente →</button>
+        </div>
+      </div>
+      <div class="libro-envoltura">
+        <div class="libro" id="libro" aria-label="Fotos de instalación">
+          <div class="pag pag-izq"><img src={`/fotos/hero-ra/${ALBUM[0].foto}.webp`} alt={ALBUM[0].pie} width="774" height="1400" /></div>
+          <div class="pag pag-der"><img src={`/fotos/hero-ra/${ALBUM[3].foto}.webp`} alt="" width="774" height="1400" /></div>
+          <!-- las hojas flexibles se arman en JS: tiras encadenadas (ver script) -->
+          <div class="libro-hoja hoja-der" id="hoja-der"></div>
+          <div class="libro-hoja hoja-izq" id="hoja-izq" hidden></div>
+          <div class="lomo" aria-hidden="true"></div>
+        </div>
+        <p class="libro-pies"><span id="pie-izq">{ALBUM[0].pie}</span><span id="pie-der">{ALBUM[1].pie}</span></p>
+        <div hidden>
+          {ALBUM.slice(4).map((a) => <img src={`/fotos/hero-ra/${a.foto}.webp`} alt="" loading="lazy" width="774" height="1400" />)}
+        </div>
+      </div>
     </div>
   </section>
 
+  <!-- ========================================================== NOSOTROS -->
+  <section class="nosotros" id="nosotros">
+    <div class="contenedor nos-grid">
+      <div class="nos-txt">
+        <p class="ceja">Nosotros</p>
+        <h2>Una tienda donde el material se ve en persona.</h2>
+        <p>Rústicos Artesanales nació para acercar la talavera y los acabados mexicanos a quienes construyen o remodelan, sin intermediarios y sin complicaciones. Trabajamos directo con talleres de Dolores Hidalgo, Guanajuato y de Puebla.</p>
+        <p>Somos una tienda familiar: la misma gente que atiende el mostrador conoce cada color, cada acabado y cada pieza. Si necesitas una medida especial, una combinación que no has visto o simplemente no sabes por dónde empezar, aquí te acompañamos.</p>
+        <ul class="nos-lista">
+          <li>Talavera lisa, decorada, en relieve y en formas especiales.</li>
+          <li>Cintillas y terminaciones en el mismo color que el azulejo.</li>
+          <li>Lavabos, muebles de baño y WC decorados.</li>
+          <li>Barro, mosaico de pasta, piedra, cantera y teja.</li>
+        </ul>
+        <a class="boton" href="/contacto/">Cómo llegar</a>
+      </div>
+      <figure class="nos-foto">
+        <img src={NOS.foto} alt={NOS.nombre} loading="lazy" width="700" height="700" />
+        <figcaption>{NOS.nombre}</figcaption>
+      </figure>
+    </div>
+  </section>
 
-  <script>
-    // Hilera del escaparate: sin barra, con "rebote" al topar en cualquiera de
-    // los dos extremos. ponytail: 12 lineas, sin libreria de carrusel.
-    const tira = document.getElementById('tira');
-    const pista = document.getElementById('pista');
-    if (tira && pista) {
-      let previo = 0, ocupado = false;
-      const golpe = (signo) => {
-        if (ocupado) return;
-        ocupado = true;
-        pista.style.transform = `translateX(${signo * 16}px)`;
-        setTimeout(() => { pista.style.transform = ''; ocupado = false; }, 220);
-      };
-      tira.addEventListener('scroll', () => {
-        const tope = tira.scrollWidth - tira.clientWidth;
-        const dir = tira.scrollLeft - previo;
-        previo = tira.scrollLeft;
-        if (dir > 0 && tira.scrollLeft >= tope - 1) golpe(-1);
-        else if (dir < 0 && tira.scrollLeft <= 1) golpe(1);
-      }, { passive: true });
-    }
-  </script>
-  <script>
-    // Escritorio: rota ~1.5s y se CONGELA en la estrella al pasar el puntero.
-    // Movil (sin puntero fino): rota sola a 3.5s y un tap entra a la categoria.
-    const fino = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    const lento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    document.querySelectorAll('[data-rota]').forEach((card) => {
-      const fotos = [...card.querySelectorAll('img')];
-      if (fotos.length < 2 || lento) return;
-      let i = 0, quieto = false;
-      setInterval(() => {
-        if (quieto) return;
-        fotos[i].classList.remove('on');
-        i = (i + 1) % fotos.length;
-        fotos[i].classList.add('on');
-      }, fino ? 1500 : 3500);
-      if (fino) {
-        card.addEventListener('mouseenter', () => {
-          quieto = true;
-          fotos[i].classList.remove('on');
-          i = 0;
-          fotos[0].classList.add('on');
-        });
-        card.addEventListener('mouseleave', () => { quieto = false; });
+  <!-- =========================================================== CONTACTO -->
+  <section class="visita">
+    <div class="contenedor">
+      <div class="visita-cab">
+        <p class="ceja">Te esperamos</p>
+        <h2>Pasa a la tienda o escríbenos.</h2>
+      </div>
+      <div class="visita-grid">
+        <div class="visita-mapa">
+          <iframe title="Ubicación de Rústicos Artesanales" src={CONTACTO.mapaEmbed} loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <div class="visita-dir">
+          <p class="ceja">Dirección</p>
+          <p class="visita-calle">{CONTACTO.direccion}</p>
+          <div class="visita-mapas">
+            <a class="boton hueco" href={CONTACTO.mapsGoogle} target="_blank" rel="noopener">Google Maps</a>
+            <a class="boton hueco" href={CONTACTO.mapsApple} target="_blank" rel="noopener">Apple Maps</a>
+          </div>
+        </div>
+      </div>
+      <div class="visita-contacto">
+        <p class="sub">Mándanos tus medidas y te asesoramos.</p>
+        <div class="visita-botones">
+          <a class="boton" href={waHref('Hola, vi su catálogo en la página y quiero cotizar.')} target="_blank" rel="noopener">WhatsApp {CONTACTO.whatsappBonito}</a>
+          <a class="boton hueco" href={telHref(CONTACTO.telefonos[0])}>Llamar {CONTACTO.telefonos[0]}</a>
+          <a class="boton hueco" href={`mailto:${CONTACTO.correo}`}>{CONTACTO.correo}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script define:vars={{ ALBUM }}>
+    // Libro abierto con HOJA FLEXIBLE (Alek 2026-09-10: "que simule una hoja
+    // real, flexible, calmada, dinamica").
+    //
+    // Cada hoja son N tiras verticales ENCADENADAS: la tira 0 cuelga del lomo
+    // y cada tira siguiente cuelga del borde de la anterior. La tira del lomo
+    // hace el giro completo (0 -> 180°); las demas solo se doblan unos grados
+    // respecto a la anterior, con mas doblez a medio vuelo y ninguno al caer.
+    // Como estan anidadas, la curva es continua: no hay huecos entre tiras.
+    // Cada tira muestra su columna de la foto por las dos caras.
+    const libro = document.getElementById('libro');
+    if (libro) {
+      const N = 14;                      // tiras por hoja
+      const M = ALBUM.length;
+      const src = (i) => `/fotos/hero-ra/${ALBUM[((i % M) + M) % M].foto}.webp`;
+      const pieDe = (i) => ALBUM[((i % M) + M) % M].pie;
+      const izq = libro.querySelector('.pag-izq img');
+      const der = libro.querySelector('.pag-der img');
+      const pieI = document.getElementById('pie-izq'), pieD = document.getElementById('pie-der');
+      const num = document.getElementById('libro-num');
+      const lento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // Construye la cadena de tiras dentro de una hoja. `lado` = 'der' | 'izq'.
+      // Devuelve { raiz, frentes[], dorsos[] } donde frentes[c] / dorsos[c] es
+      // la imagen de la COLUMNA c (0 = borde izquierdo de la pagina).
+      function armar(hoja, lado) {
+        hoja.innerHTML = '';
+        const frentes = new Array(N), dorsos = new Array(N);
+        let padre = hoja, raiz = null;
+        for (let d = 0; d < N; d++) {
+          // columna que ocupa esta tira en su pagina: la raiz esta junto al lomo
+          const col = lado === 'der' ? d : N - 1 - d;
+          // al caer del otro lado, la tira ocupa la columna espejo
+          const colDorso = N - 1 - col;
+          const tira = document.createElement('div');
+          tira.className = 'tira' + (d === 0 ? ' raiz' : ' doblez');
+          // el doblez crece hacia la orilla libre: la hoja se curva mas en la punta
+          // suma ~32° en la punta a medio vuelo: se curva sin pasar por debajo del libro
+          tira.style.setProperty('--doblez', (1.2 + d * 0.18) + 'deg');
+          const cara = (clase, c) => {
+            const el = document.createElement('div');
+            el.className = 'cara ' + clase;
+            const img = document.createElement('img');
+            img.alt = ''; img.width = 774; img.height = 1400; img.draggable = false;
+            // la cara mide 1px de mas (sin costuras); se compensa aqui para que
+            // las columnas de todas las tiras empalmen exactamente
+            img.style.width = `calc(${N * 100}% - ${N}px)`;
+            img.style.left = `calc(${-c * 100}% + ${c}px)`;
+            el.appendChild(img);
+            return { el, img };
+          };
+          const f = cara('frente', col), b = cara('dorso', colDorso);
+          frentes[col] = f.img; dorsos[colDorso] = b.img;
+          tira.appendChild(f.el); tira.appendChild(b.el);
+          padre.appendChild(tira);
+          if (d === 0) raiz = tira;
+          padre = tira;
+        }
+        return { raiz, frentes, dorsos };
       }
-    });
+      const hd = document.getElementById('hoja-der'), hi = document.getElementById('hoja-izq');
+      const HD = armar(hd, 'der'), HI = armar(hi, 'izq');
+      const poner = (imgs, url) => imgs.forEach((im) => { im.src = url; });
+
+      let k = 0, girando = false, visible = true, timer = null;
+
+      function pintar() {
+        // reposo: izquierda k, derecha k+1; la hoja derecha ya trae k+1 al frente y k+2 al dorso
+        izq.src = src(k); izq.alt = pieDe(k);
+        poner(HD.frentes, src(k + 1)); poner(HD.dorsos, src(k + 2));
+        der.src = src(k + 3);
+        pieI.textContent = pieDe(k); pieD.textContent = pieDe(k + 1);
+        num.textContent = Math.floor(k / 2) + 1;
+      }
+
+      function pasar(dir) {
+        if (girando) return;
+        girando = true;
+        let H, hoja;
+        if (dir > 0) {
+          H = HD; hoja = hd;
+        } else {
+          H = HI; hoja = hi; hi.hidden = false;
+          poner(HI.frentes, src(k)); poner(HI.dorsos, src(k - 1));
+          izq.src = src(k - 2);
+          der.src = src(k + 1); hd.hidden = true;
+        }
+        libro.classList.add('girando');
+        hoja.classList.add('gira');
+        let listo = false;
+        const terminar = () => {
+          if (listo) return;
+          listo = true;
+          k = (k + 2 * dir + M) % M;
+          hoja.classList.remove('gira');
+          libro.classList.remove('girando');
+          hi.hidden = true; hd.hidden = false;
+          pintar();
+          setTimeout(() => { girando = false; }, 60);
+        };
+        H.raiz.addEventListener('animationend', terminar, { once: true });
+        setTimeout(terminar, 2300);
+      }
+
+      function programar() {
+        clearInterval(timer);
+        if (!lento && visible && !document.hidden) timer = setInterval(() => pasar(1), 5200);
+      }
+      new IntersectionObserver((es) => { visible = es[0].isIntersecting; programar(); }, { threshold: 0.3 }).observe(libro);
+      document.addEventListener('visibilitychange', programar);
+      document.getElementById('libro-sig').addEventListener('click', () => { pasar(1); programar(); });
+      document.getElementById('libro-atras').addEventListener('click', () => { pasar(-1); programar(); });
+      libro.addEventListener('click', (e) => { pasar(e.clientX < libro.getBoundingClientRect().left + libro.clientWidth / 2 ? -1 : 1); programar(); });
+      pintar();
+    }
   </script>
 
-  <style>
-    .cats { padding: 76px 0 8px; }
-    .hero { position: relative; isolation: isolate; overflow: hidden; }
-    .hero-foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
-    .hero::after {
-      content: ''; position: absolute; inset: 0; z-index: -1;
-      background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35) 45%, rgba(0,0,0,.6));
-    }
-    .hero-txt { position: relative; color: #fff; padding: 150px 16px 132px; }
-    .hero-txt h1, .hero-txt .reta { color: #fff; }
-    .hero-pie { margin: 18px 0 0; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; opacity: .8; }
-    @media (max-width: 640px) { .hero-txt { padding: 96px 16px 84px; } }
-
-    /* ---------------- escaparate en hilera ---------------- */
-    .escaparate { padding: 96px 0 64px; --alto-obra: clamp(340px, 54vh, 520px); }
-    .escaparate h2 { font-size: clamp(24px, 3vw, 34px); margin: 0 0 6px; }
-    .escaparate .sub { margin: 0 0 38px; color: var(--tenue); }
+  <style is:global>
+    /* ================= hoja flexible del libro (elementos creados en JS) ================= */
+    /* --n: tiras por hoja. Cada tira mide 1/n de la pagina y cuelga de la anterior. */
+    .libro { --n: 14; --dur: 2.1s; }
+    .libro-hoja { position: absolute; top: 0; bottom: 0; width: 50%; z-index: 2; transform-style: preserve-3d; pointer-events: none; }
+    .hoja-der { left: 50%; }
+    .hoja-izq { left: 0; }
     .tira {
-      display: flex; overflow-x: auto; scroll-snap-type: x proximity;
-      padding: 6px 0 10px; scrollbar-width: none; -ms-overflow-style: none;
-      overscroll-behavior-x: contain;
+      position: absolute; top: 0; bottom: 0; width: calc(100% / var(--n));
+      transform-style: preserve-3d; will-change: transform;
     }
-    .tira::-webkit-scrollbar { display: none; }
-    .pista {
-      display: flex; gap: 34px; padding: 0 max(16px, calc((100vw - 1200px) / 2));
-      transition: transform .18s cubic-bezier(.2,.8,.3,1); will-change: transform;
+    /* raiz: pegada al lomo. Las demas cuelgan del borde de su padre. */
+    .hoja-der .tira.raiz { left: 0; transform-origin: left center; }
+    .hoja-der .tira.doblez { left: 100%; width: 100%; transform-origin: left center; }
+    .hoja-izq .tira.raiz { right: 0; transform-origin: right center; }
+    .hoja-izq .tira.doblez { right: 100%; width: 100%; transform-origin: right center; }
+    .tira .cara {
+      /* right: -1px — la cara se mete 1px debajo de la tira siguiente: sin costuras */
+      position: absolute; inset: 0; right: -1px; overflow: hidden;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      background: var(--arena-claro);
     }
-    .pista figure {
-      position: relative; margin: 0; scroll-snap-align: start;
-      flex: 0 0 calc(var(--alto-obra) * 4 / 5);
-    }
-    /* Alek 2026-09-03: TODAS DEL MISMO TAMANO, grandes, y que quepan en la
-       pantalla. Por eso el tamano se define por ALTURA (46vh, atada al
-       viewport) y la proporcion 4:5 saca el ancho: uniforme siempre, y nunca
-       mas alto de lo que da la pantalla. */
-    .pista img {
-      width: 100%; height: var(--alto-obra); object-fit: cover; display: block;
-      border-radius: var(--radio); background: #ece8e1;
-      transition: filter .35s ease, transform .35s ease;
-    }
-    .pista figcaption { font-size: 12px; color: var(--tenue); padding: 14px 2px 0; }
-    .ver-prod {
-      position: absolute; left: 50%; top: calc(50% - 18px);
-      transform: translate(-50%, -50%) scale(.96);
-      padding: 9px 18px; border-radius: 999px; background: #fff; color: var(--carbon);
-      font-weight: 600; font-size: 13px; white-space: nowrap;
-      opacity: 0; pointer-events: none; z-index: 3;
-      transition: opacity .3s ease, transform .3s ease;
-    }
-    .ver-prod.pronto { background: rgba(255,255,255,.9); color: var(--tenue); cursor: default; }
-    .pista figure:hover img { filter: blur(6px) brightness(.85); transform: scale(1.02); }
-    .pista figure:hover .ver-prod { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
-    @media (hover: none) { .pista figure .ver-prod { opacity: 1; pointer-events: auto; } .pista figure img { filter: brightness(.9); } }
+    .tira .dorso { transform: rotateY(180deg); }
+    /* max-width: none — el reset global pone img { max-width: 100% } y aplastaba la columna a 1/n */
+    .tira .cara img { position: absolute; top: 0; height: 100%; max-width: none; object-fit: contain; display: block; }
+    /* borde superior/inferior de la pagina */
+    .tira .cara::before { content: ''; position: absolute; inset: 0; border-top: 1px solid var(--linea); border-bottom: 1px solid var(--linea); pointer-events: none; }
+    /* sombra que se mueve con el vuelo: se oscurece al levantarse, se aclara al caer */
+    .tira .cara::after { content: ''; position: absolute; inset: 0; background: rgba(60,42,36,.28); opacity: 0; pointer-events: none; }
 
-    .hero { padding: 92px 0 78px; }
-    .hero h1 { font-size: clamp(34px, 5.6vw, 64px); font-weight: 700; letter-spacing: -0.035em; }
-    .reta {
-      margin: 22px 0 0; font-size: clamp(16px, 2vw, 21px);
-      color: var(--coral); font-weight: 600;
+    /* ---- giro: la raiz da la vuelta completa, calmada; los dobleces se curvan y se aplanan ---- */
+    .libro-hoja.gira .tira.raiz { animation: libro-raiz var(--dur) cubic-bezier(.42, 0, .22, 1) both; }
+    .libro-hoja.gira .tira.doblez { animation: libro-doblez var(--dur) ease-in-out both; }
+    .libro-hoja.gira .tira .cara::after { animation: libro-sombra var(--dur) ease-in-out both; }
+    .hoja-der.gira .tira.raiz { --giro: -180deg; --signo: 1; }
+    .hoja-izq.gira .tira.raiz { --giro: 180deg; --signo: -1; }
+    .hoja-der.gira .tira.doblez { --signo: 1; }
+    .hoja-izq.gira .tira.doblez { --signo: -1; }
+    @keyframes libro-raiz {
+      from { transform: rotateY(0deg); }
+      to   { transform: rotateY(var(--giro)); }
     }
-    .cta {
-      display: inline-block; margin-top: 32px; padding: 13px 26px;
-      background: var(--indigo); color: #fff; border-radius: 999px;
-      font-size: 14px; font-weight: 600;
+    /* la orilla se retrasa al levantarse (doblez maximo temprano) y se aplana al caer */
+    @keyframes libro-doblez {
+      0%   { transform: rotateY(0deg); }
+      30%  { transform: rotateY(calc(var(--doblez) * var(--signo) * 1)); }
+      60%  { transform: rotateY(calc(var(--doblez) * var(--signo) * .55)); }
+      85%  { transform: rotateY(calc(var(--doblez) * var(--signo) * -.12)); }
+      100% { transform: rotateY(0deg); }
     }
-    .cta:hover { background: var(--coral); }
-
-    .cuadricula { display: grid; grid-template-columns: repeat(3, 1fr); gap: 52px 40px; }
-    @media (max-width: 900px) { .cuadricula { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 560px) { .cuadricula { grid-template-columns: 1fr; gap: 36px; } }
-
-    .marco {
-      position: relative; aspect-ratio: 4 / 3; overflow: hidden;
-      border-radius: var(--radio); background: #fff; border: 1px solid var(--linea);
+    @keyframes libro-sombra {
+      0% { opacity: 0; } 45% { opacity: .55; } 100% { opacity: 0; }
     }
-    .marco img {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      object-fit: cover; opacity: 0; transition: opacity .6s ease;
+    @media (prefers-reduced-motion: reduce) {
+      .libro-hoja.gira .tira.raiz, .libro-hoja.gira .tira.doblez, .libro-hoja.gira .tira .cara::after { animation-duration: .01s; }
     }
-    .marco img.on { opacity: 1; }
-    .cat-txt { padding: 20px 2px 0; }
-    .cat-txt h2 { font-size: 20px; font-weight: 600; }
-    .cat-txt p { margin: 5px 0 0; font-size: 14px; color: var(--tenue); }
-    .cat-txt span { display: block; margin-top: 6px; font-size: 12px; color: var(--indigo); font-weight: 600; }
-
-    .franja { margin-top: 110px; padding: 60px 0; border-top: 1px solid var(--linea); }
-    .tres { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; }
-    .tres b { display: block; font-size: 15px; }
-    .tres span { display: block; margin-top: 5px; font-size: 14px; color: var(--tenue); }
-    @media (max-width: 760px) { .tres { grid-template-columns: 1fr; gap: 22px; } }
   </style>
+
   <style>
+    /* ------------------------------------------------------------- hero */
+    .hero { padding: 64px 0 40px; }
+    .hero-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center; }
+    .hero h1 { margin-top: 22px; font-size: clamp(36px, 4.6vw, 60px); }
+    .hero h1 em { font-style: italic; font-weight: 500; color: var(--terracota); }
+    .hero-p { margin-top: 24px; max-width: 480px; font-size: 16px; color: var(--tenue); }
+    .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+    .hero-dato { margin-top: 30px; display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); }
+    /* la foto principal se muestra COMPLETA: nada de recortes (Alek 2026-09-10) */
+    .hero-foto { margin: 0; }
+    .hero-foto img { width: 100%; height: auto; border-radius: var(--radio); border: 1px solid var(--linea); background: var(--blanco); }
+    .hero-foto figcaption { margin-top: 10px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); text-align: right; }
+
+    @media (max-width: 900px) {
+      .hero { padding: 40px 0 20px; }
+      .hero-grid { grid-template-columns: 1fr; gap: 34px; }
+    }
+
+    /* ---------------------------------------------------------- pilares */
+    .pilares { margin-top: 56px; border-top: 1px solid var(--linea); border-bottom: 1px solid var(--linea); background: var(--arena-claro); }
+    .tres { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; padding-top: 38px; padding-bottom: 38px; }
+    .tres b { display: block; font-family: var(--serif); font-size: 24px; font-weight: 600; line-height: 1.1; }
+    .tres span { display: block; margin-top: 8px; font-size: 14px; color: var(--tenue); }
+    @media (max-width: 760px) { .tres { grid-template-columns: 1fr; gap: 24px; } }
+
+    /* ---------------------------------------------------------- catalogo */
+    .cats { padding: 96px 0 20px; }
+    .cab-sec h2 { margin-top: 14px; }
+    .sub { margin-top: 12px; color: var(--tenue); font-size: 15px; max-width: 600px; }
+    .grupos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px 28px; margin-top: 44px; }
+    @media (max-width: 900px) { .grupos { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .grupos { grid-template-columns: 1fr; } }
+    .grupo { display: block; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--blanco); overflow: hidden; transition: border-color .15s ease; }
+    .grupo:hover { border-color: var(--terracota); }
+    .marco { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: var(--blanco); border-bottom: 1px solid var(--linea); padding: 18px; }
+    .marco img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
+    .marco-vacio { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: var(--arena-claro); }
+    .marco-vacio img { width: 90px; height: auto; opacity: .5; }
+    .marco-vacio span { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--tenue); }
+    .grupo-txt { padding: 20px 22px 22px; }
+    .grupo-txt h3 { font-size: 28px; }
+    .grupo-txt p { margin: 6px 0 0; font-size: 13px; color: var(--tenue); }
+    .grupo-txt ul { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+    .grupo-txt li { font-size: 11px; letter-spacing: .04em; padding: 4px 9px; border: 1px solid var(--linea); border-radius: 999px; color: var(--cacao); }
+    .grupo-txt span { display: block; margin-top: 14px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--terracota); font-weight: 500; }
+    .grupo.pronto .grupo-txt span { color: var(--tenue); }
+
+    /* -------------------------------------------------------- secuencias */
+    .sec-intro { text-align: center; padding: 96px 28px 40px; }
+    .sec-intro h2 { margin-top: 16px; }
+    .sec-intro .sub { margin-inline: auto; }
+    .sec { position: relative; height: calc(var(--largo) * 100vh); }
+    .sec-pegado { position: sticky; top: 0; height: 100vh; overflow: hidden; background: var(--arena-claro); }
+    .sec canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .sec-velo { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(60,42,36,.55) 0%, rgba(60,42,36,.25) 45%, rgba(60,42,36,0) 75%); }
+    .sec-txt { position: absolute; inset: 0; max-width: var(--ancho); margin: 0 auto; padding: 0 28px; display: flex; flex-direction: column; justify-content: center; color: var(--marfil); }
+    .sec-num { font-family: var(--serif); font-size: 15px; letter-spacing: .3em; color: var(--arena); }
+    .sec-t { color: var(--marfil); font-size: clamp(40px, 6vw, 84px); margin-top: 8px; max-width: 12ch; }
+    .sec-capas { position: relative; height: 4.2em; margin-top: 22px; max-width: 460px; font-size: clamp(16px, 1.6vw, 20px); }
+    .sec-capa { position: absolute; left: 0; top: 0; opacity: 0; transform: translateY(10px); transition: opacity .45s ease, transform .45s ease; color: var(--marfil); }
+    .sec-capa.on { opacity: 1; transform: none; }
+    .sec-barra { width: 160px; height: 1px; background: rgba(250,246,239,.3); margin-top: 26px; }
+    .sec-barra i { display: block; height: 100%; background: var(--terracota); transform-origin: left; transform: scaleX(0); }
+
+    /* ------------------------------------------------------------ obra */
+    /* Libro abierto: dos paginas 3:4, el libro es 3:2. Su alto se limita a
+       la pantalla (62vh) para que la seccion completa quepa de un golpe. */
+    .obra { padding: 80px 0 20px; }
+    .obra-cab { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .obra-cab h2 { margin-top: 12px; }
+    .obra-ctl { display: flex; align-items: center; gap: 10px; }
+    .obra-num { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--tenue); margin-right: 8px; }
+    .obra-num b { color: var(--terracota); }
+    .boton.chico { padding: 10px 16px; font-size: 12px; }
+    .libro-envoltura { --alto-libro: min(62vh, 560px); margin: 26px auto 0; width: calc(var(--alto-libro) * 1.5); max-width: 100%; }
+    .libro {
+      position: relative; aspect-ratio: 3 / 2; perspective: 2200px; cursor: pointer; user-select: none;
+    }
+    .pag {
+      position: absolute; top: 0; bottom: 0; width: 50%; overflow: hidden;
+      background: var(--arena-claro); border: 1px solid var(--linea);
+    }
+    .pag-izq { left: 0; border-radius: var(--radio) 0 0 var(--radio); }
+    .pag-der { right: 0; border-radius: 0 var(--radio) var(--radio) 0; }
+    .pag img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--arena-claro); }
+    /* sombra del lomo sobre ambas paginas */
+    .lomo { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; transform: translateX(-50%); background: var(--linea); pointer-events: none; z-index: 3; }
+    .pag-izq::after, .pag-der::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
+    .pag-izq::after { background: linear-gradient(270deg, rgba(60,42,36,.14), rgba(60,42,36,0) 22%); }
+    .pag-der::after { background: linear-gradient(90deg, rgba(60,42,36,.14), rgba(60,42,36,0) 22%); }
+    .libro-pies { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); }
+    .libro-pies span:last-child { text-align: right; }
+    @media (max-width: 640px) { .libro-envoltura { width: 100%; } .obra-cab { flex-direction: column; align-items: flex-start; } }
+
+    /* ---------------------------------------------------------- nosotros */
+    .nosotros { padding: 90px 0 40px; }
+    .nos-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center; }
+    .nos-txt h2 { margin: 14px 0 22px; }
+    .nos-txt p { margin-bottom: 16px; color: var(--tenue); }
+    .nos-lista { margin: 8px 0 28px; padding: 0; list-style: none; }
+    .nos-lista li { padding: 9px 0 9px 22px; border-bottom: 1px solid var(--linea); position: relative; font-size: 14px; }
+    .nos-lista li::before { content: ''; position: absolute; left: 2px; top: 17px; width: 8px; height: 8px; background: var(--terracota); transform: rotate(45deg); }
+    .nos-foto { margin: 0; }
+    .nos-foto img { width: 100%; height: auto; border-radius: var(--radio); border: 1px solid var(--linea); background: var(--blanco); }
+    .nos-foto figcaption { margin-top: 10px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); text-align: right; }
+    @media (max-width: 900px) { .nos-grid { grid-template-columns: 1fr; gap: 36px; } }
+
+    /* ------------------------------------------------------------ visita */
+    .visita { margin-top: 70px; padding: 90px 0 90px; background: var(--arena-claro); border-top: 1px solid var(--linea); }
+    .visita-cab h2 { margin-top: 14px; }
+    .visita-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 34px; margin-top: 34px; }
+    .visita-mapa { min-height: 380px; border-radius: var(--radio); overflow: hidden; border: 1px solid var(--linea); background: var(--blanco); }
+    .visita-mapa iframe { width: 100%; height: 100%; min-height: 380px; border: 0; filter: saturate(.7) sepia(.15); }
+    .visita-dir { padding: 26px 28px; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); }
+    .visita-calle { margin-top: 12px; font-family: var(--serif); font-size: 24px; font-weight: 600; line-height: 1.2; }
+    .visita-mapas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .horario-t { margin-top: 26px; }
+    .visita-h { margin-top: 8px; font-size: 14px; } .visita-h b { font-weight: 500; margin-right: 8px; }
+    .visita-contacto { margin-top: 34px; padding-top: 30px; border-top: 1px solid var(--linea); }
+    .visita-botones { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+    @media (max-width: 900px) { .visita-grid { grid-template-columns: 1fr; } }
   </style>
 </Base>

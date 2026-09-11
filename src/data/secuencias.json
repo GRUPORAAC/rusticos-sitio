@@ -1,0 +1,35 @@
+[
+  {
+    "id": "hornos",
+    "titulo": "Primero, el fuego.",
+    "textos": [
+      { "desde": 0, "hasta": 0.34, "t": "Cada azulejo entra al horno crudo, todavía color barro." },
+      { "desde": 0.34, "hasta": 0.67, "t": "Horas a más de mil grados. Nada de esto se acelera." },
+      { "desde": 0.67, "hasta": 1.01, "t": "Sale bizcocho: firme, poroso, listo para el esmalte." }
+    ],
+    "cuadros": 36,
+    "placeholder": true
+  },
+  {
+    "id": "esmaltado",
+    "titulo": "Luego, el color.",
+    "textos": [
+      { "desde": 0, "hasta": 0.34, "t": "El esmalte se aplica a mano, pieza por pieza." },
+      { "desde": 0.34, "hasta": 0.67, "t": "El diseño se marca con plantilla, como una serigrafía." },
+      { "desde": 0.67, "hasta": 1.01, "t": "Segunda quema. El color se funde con el barro para siempre." }
+    ],
+    "cuadros": 36,
+    "placeholder": true
+  },
+  {
+    "id": "mueble",
+    "titulo": "Al final, tu proyecto.",
+    "textos": [
+      { "desde": 0, "hasta": 0.34, "t": "Un mismo mueble." },
+      { "desde": 0.34, "hasta": 0.67, "t": "Cambia el lavabo, cambia el acabado." },
+      { "desde": 0.67, "hasta": 1.01, "t": "Tú eliges la combinación. Nosotros la armamos." }
+    ],
+    "cuadros": 36,
+    "placeholder": true
+  }
+]

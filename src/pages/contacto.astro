@@ -1,0 +1,113 @@
+---
+import Base from '../layouts/Base.astro';
+import Flor from '../components/Flor.astro';
+import { CONTACTO, waHref, telHref } from '../lib/catalogo.js';
+// Esta pagina es el destino del QR de las tarjetas de presentacion
+// (contexto RAAC 2026-09-02): un QR impreso es para siempre, asi que la ruta
+// /contacto/ no se mueve nunca.
+---
+<Base titulo="Contacto" descripcion={`Rústicos Artesanales: ${CONTACTO.direccion}. WhatsApp ${CONTACTO.whatsappBonito}. ${CONTACTO.horario[0].dias} ${CONTACTO.horario[0].horas}.`}>
+  <div class="contenedor">
+    <header class="cab">
+      <p class="ceja centro der">Contacto</p>
+      <h1>Te esperamos en Coyoacán.</h1>
+      <p class="intro">Pasa a la tienda, escríbenos por WhatsApp o mándanos tus medidas y te asesoramos.</p>
+    </header>
+
+    <div class="grid">
+      <div class="mapa">
+        <iframe title="Ubicación de Rústicos Artesanales" src={CONTACTO.mapaEmbed} loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+      <div class="tarjeta">
+        <p class="ceja">Tienda física</p>
+        <h2>{CONTACTO.direccionCorta}</h2>
+        <p class="dir">{CONTACTO.direccion}</p>
+        <div class="mapas">
+          <a class="boton" href={CONTACTO.mapsGoogle} target="_blank" rel="noopener">Abrir en Google Maps</a>
+          <a class="boton hueco" href={CONTACTO.mapsApple} target="_blank" rel="noopener">Abrir en Apple Maps</a>
+        </div>
+        <p class="ceja horario-t">Redes</p>
+        <div class="redes">
+          <a href={CONTACTO.instagram} target="_blank" rel="noopener">Instagram <b>{CONTACTO.usuario}</b></a>
+          <a href={CONTACTO.facebook} target="_blank" rel="noopener">Facebook <b>{CONTACTO.usuario}</b></a>
+        </div>
+      </div>
+    </div>
+
+    <p class="ceja acc-t">Escríbenos</p>
+    <div class="acciones">
+      <a class="accion wa" href={waHref('Hola, quiero cotizar un proyecto.')} target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5C10 9 9.4 7.6 9.1 7c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3 4.8 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.2-.3-.3-.6-.4z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.7 1.5 5.3L2 22l4.8-1.5c1.5.9 3.3 1.4 5.2 1.4 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.7 0-3.4-.5-4.8-1.4l-.3-.2-3 .9.9-2.9-.2-.3C3.7 15 3.2 13.5 3.2 12 3.2 7.1 7.1 3.2 12 3.2S20.8 7.1 20.8 12 16.9 20.2 12 20.2z"/></svg>
+        <span><b>WhatsApp</b>{CONTACTO.whatsappBonito}</span>
+      </a>
+      {CONTACTO.telefonos.map((t) => (
+        <a class="accion" href={telHref(t)}>
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>
+          <span><b>Teléfono</b>{t}</span>
+        </a>
+      ))}
+      <a class="accion" href={`mailto:${CONTACTO.correo}`}>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        <span><b>Correo</b>{CONTACTO.correo}</span>
+      </a>
+    </div>
+
+    <section class="como">
+      <p class="ceja">Cómo cotizamos</p>
+      <div class="pasos">
+        <div><b>1</b><h3>Nos dices qué viste</h3><p>El nombre de la pieza tal como aparece en la galería.</p></div>
+        <div><b>2</b><h3>Nos das medidas</h3><p>Metros cuadrados o lineales del espacio. Con eso calculamos piezas, cajas y merma.</p></div>
+        <div><b>3</b><h3>Te cotizamos</h3><p>Precio, existencia y tiempo de entrega, por WhatsApp o correo. Lo recoges en tienda o lo enviamos.</p></div>
+      </div>
+    </section>
+  </div>
+
+  <style>
+    .cab { text-align: center; padding: 54px 0 34px; max-width: 700px; margin: 0 auto; }
+    .cab h1 { margin-top: 16px; }
+    .intro { margin-top: 14px; color: var(--tenue); font-size: 16px; }
+
+    .acciones { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 16px; }
+    .accion {
+      display: flex; align-items: center; gap: 14px; padding: 18px 20px;
+      background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio);
+      color: var(--cacao); transition: border-color .15s ease, transform .15s ease;
+    }
+    .accion:hover { border-color: var(--terracota); transform: translateY(-2px); }
+    .accion svg { flex: 0 0 auto; color: var(--terracota); }
+    .accion span { display: flex; flex-direction: column; font-size: 14px; word-break: break-all; }
+    .accion b { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--tenue); font-weight: 600; margin-bottom: 3px; }
+    .accion.wa { background: var(--terracota); color: var(--marfil); border-color: var(--terracota); }
+    .accion.wa svg, .accion.wa b { color: var(--marfil); }
+    .accion.wa b { color: var(--arena); }
+    .accion.wa:hover { background: var(--cacao); border-color: var(--cacao); }
+    @media (max-width: 900px) { .acciones { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 520px) { .acciones { grid-template-columns: 1fr; } }
+
+    .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; margin-top: 10px; }
+    .acc-t { margin-top: 50px; }
+    .tarjeta { padding: 34px; background: var(--arena-claro); border: 1px solid var(--linea); border-radius: var(--radio); }
+    .tarjeta h2 { margin-top: 12px; }
+    .dir { margin-top: 10px; color: var(--tenue); }
+    .mapas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+    .horario-t { margin-top: 32px; }
+    .horario { list-style: none; margin: 12px 0 0; padding: 0; }
+    .horario li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--linea); font-size: 14px; }
+    .horario b { font-weight: 500; flex: 1; }
+    .horario span { color: var(--tenue); }
+    .redes { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; font-size: 14px; }
+    .redes a:hover { color: var(--terracota); }
+    .redes b { font-weight: 500; }
+    .mapa { min-height: 420px; border-radius: var(--radio); overflow: hidden; border: 1px solid var(--linea); background: var(--blanco); }
+    .mapa iframe { width: 100%; height: 100%; min-height: 420px; border: 0; filter: saturate(.7) sepia(.15); }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+    .como { margin-top: 80px; }
+    .pasos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 22px; }
+    .pasos div { padding: 26px 24px; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--blanco); position: relative; }
+    .pasos b { display: block; font-family: var(--serif); font-size: 40px; font-weight: 600; color: var(--terracota); line-height: 1; }
+    .pasos h3 { margin-top: 10px; font-size: 22px; }
+    .pasos p { margin-top: 8px; font-size: 14px; color: var(--tenue); }
+    @media (max-width: 760px) { .pasos { grid-template-columns: 1fr; } }
+  </style>
+</Base>

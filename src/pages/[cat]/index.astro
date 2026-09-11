@@ -1,81 +1,258 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Tarjeta from '../../components/Tarjeta.astro';
-import { ARBOL, porCat, porSub } from '../../lib/catalogo.js';
-import Colores from '../../components/Colores.astro';
-import FAMS from '../../data/familias.json';
-
+import Pieza from '../../components/Pieza.astro';
+import Flor from '../../components/Flor.astro';
+import { ARBOL, porCat, porSub, formatosDe, medida, coloresDe, COLORES, CONTACTO, waHref, telHref, grupoDe } from '../../lib/catalogo.js';
+import FAM from '../../data/familias.json';
 
 export function getStaticPaths() {
   return ARBOL.map((c) => ({ params: { cat: c.slug }, props: { c } }));
 }
 const { c } = Astro.props;
+const g = grupoDe(c);
 const items = porCat(c.slug);
-const subs = c.subs.map((s) => ({ ...s, items: porSub(c.slug, s.slug) })).filter((s) => s.items.length);
-const unaSola = subs.length === 1;
+const todasSubs = c.subs.map((s) => ({ ...s, n: porSub(c.slug, s.slug).length }));
+const subs = todasSubs.filter((s) => s.n);
+// subcategorias sin foto todavia (p. ej. Relieve > Especiales): se anuncian, no se filtran
+const subsPronto = todasSubs.filter((s) => !s.n);
+const nombreSub = Object.fromEntries(c.subs.map((s) => [s.slug, s.nombre]));
+const hayPiezas = items.length > 0;
+// piezas altas y angostas: se muestran completas, no recortadas al cuadro
+const ENTERAS = new Set(['cintillas', 'terminaciones']);
+
+// filtro de color: familias -> tonos, solo si hay mas de un color
+const cuenta = {};
+for (const p of items) for (const col of p.colores || []) cuenta[col] = (cuenta[col] || 0) + 1;
+const porFamilia = {};
+for (const col of Object.keys(cuenta)) (porFamilia[FAM[col] || 'Multicolor'] ||= []).push(col);
+const familias = FAM._orden
+  .filter((f) => porFamilia[f])
+  .map((f) => ({ nombre: f, tono: FAM._tono[f], tonos: porFamilia[f].sort(), n: porFamilia[f].reduce((s, x) => s + cuenta[x], 0) }));
+const conColor = coloresDe(items).length > 1;
+
+const tabla = formatosDe(c.slug);
+const mapa = Object.fromEntries(items.map((p) => [p.id, { sub: p.sub, colores: p.colores || [] }]));
+const vecinos = ARBOL.filter((x) => x.grupo === c.grupo && x.slug !== c.slug);
+const primerSub = subs[0];
 ---
-<Base titulo={c.nombre} descripcion={c.lema}>
+<Base titulo={c.nombre} descripcion={`${c.nombre}: ${c.lema} ${c.specs.intro}`}>
   <div class="contenedor">
-    <p class="miga"><a href="/">Inicio</a> · {c.nombre}</p>
+    <p class="miga"><a href="/">Inicio</a> <span>·</span> <a href="/catalogo/">Catálogo</a> <span>·</span> <a href={`/catalogo/${g.slug}/`}>{g.nombre}</a> <span>·</span> {c.nombre}</p>
     <header class="cab">
+      <a class="ceja" href={`/catalogo/${g.slug}/`}>{c.grupo}</a>
       <h1>{c.nombre}</h1>
-      <p>{c.lema} <b>{items.length} productos.</b></p>
+      <p class="lema">{c.lema}</p>
+      <p class="intro">{c.specs.intro}</p>
     </header>
-
-    <Colores items={items} />
-
-    {!unaSola && (
-      <nav class="subs">
-        {subs.map((s) => <a href={`/${c.slug}/${s.slug}/`}>{s.nombre} <span>{s.items.length}</span></a>)}
-      </nav>
-    )}
-
-    <div class="rejilla-cat">
-      {subs.map((s) => (
-        <>
-          {!unaSola && (
-            <h2 class="sub-t" data-sub={s.slug}>
-              <a href={`/${c.slug}/${s.slug}/`}>{s.nombre}</a>
-              <a class="ver" href={`/${c.slug}/${s.slug}/`}>Ver los {s.items.length} →</a>
-            </h2>
-          )}
-          {s.items.map((it) => <Tarjeta p={it} />)}
-        </>
-      ))}
-    </div>
-    <p class="vacio-filtro" hidden>No hay productos de ese color en esta categoría.</p>
   </div>
 
-  <script define:vars={{ mapa: Object.fromEntries(items.map((p) => [p.url, p.colores])), fams: FAMS }}>
-    import('/filtro.js').then((m) => m.montarFiltro(mapa, fams));
-  </script>
+  {hayPiezas ? (
+    <>
+      <div class="contenedor">
+        <div class="filtros" id="filtros">
+          {subs.length > 1 && (
+            <div class="fila subs">
+              <button class="pastilla on" type="button" data-sub-btn="">Todo <small>{items.length}</small></button>
+              {subs.map((s) => <button class="pastilla" type="button" data-sub-btn={s.slug}>{s.nombre} <small>{s.n}</small></button>)}
+              {subsPronto.map((s) => <span class="pastilla pronto" title="Fotos en camino">{s.nombre} <small>en tienda</small></span>)}
+            </div>
+          )}
+          {conColor && (
+            <div class="colores">
+              <div class="fila">
+                <span class="et">Color</span>
+                {familias.map((f) => (
+                  <button class="gota" type="button" data-fam-btn={f.nombre} title={`${f.nombre} · ${f.n}`} aria-label={`${f.nombre}, ${f.n} piezas`}>
+                    <span class="disco" style={`background:${f.tono}`}></span>
+                  </button>
+                ))}
+                <button class="quitar" id="quitar-filtro" type="button" hidden>× Quitar filtros</button>
+              </div>
+              {familias.filter((f) => f.tonos.length > 1).map((f) => (
+                <div class="tonos" data-de={f.nombre} hidden>
+                  <span class="et">{f.nombre}</span>
+                  {f.tonos.map((col) => (
+                    <button class="gota chica" type="button" data-color-btn={col} title={`${col} · ${cuenta[col]}`}>
+                      <span class="disco" style={`background:${COLORES[col] || '#ccc'}`}></span>
+                      <span class="etiq">{col}</span>
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+          {!conColor && subs.length > 1 && <button class="quitar suelto" id="quitar-filtro" type="button" hidden>× Quitar filtros</button>}
+          <p class="resumen"><b id="cuenta-filtro">{items.length}</b> piezas · toca una para ampliarla</p>
+        </div>
+
+        <div class="galeria">
+          {items.map((p, i) => <Pieza p={p} sub={nombreSub[p.sub] || ''} entera={ENTERAS.has(c.slug)} prioridad={i < 8} />)}
+        </div>
+        <p class="vacio vacio-filtro" hidden>No hay piezas con ese filtro. <button type="button" class="liga" onclick="document.getElementById('quitar-filtro')?.click()">Ver todas</button></p>
+      </div>
+
+      <script define:vars={{ mapa, fams: FAM }}>
+        import('/filtro.js').then((m) => m.montarFiltro(mapa, fams));
+      </script>
+    </>
+  ) : (
+    <div class="contenedor">
+      <div class="en-tienda">
+        <img src="/icono.svg" alt="" width="140" height="94" />
+        <h2>Lo tenemos en tienda.</h2>
+        <p>Las fotos de {c.nombre.toLowerCase()} vienen en camino. Mientras, ven a verlo a {CONTACTO.direccionCorta} o escríbenos y te mandamos fotos de lo que hay.</p>
+        <div class="botones">
+          <a class="boton" href={waHref(`Hola, me interesa ${c.nombre.toLowerCase()}. ¿Me mandan fotos y opciones?`)} target="_blank" rel="noopener">Pedir fotos por WhatsApp</a>
+          <a class="boton hueco" href="/contacto/">Cómo llegar</a>
+        </div>
+      </div>
+    </div>
+  )}
+
+  <!-- ------------------------------------------------ especificaciones -->
+  <section class="specs" id="especificaciones">
+    <div class="contenedor specs-grid">
+      <div>
+        <p class="ceja">Especificaciones</p>
+        <h2>Formatos de {c.nombre.toLowerCase()}</h2>
+        <p class="specs-intro">{c.specs.intro}</p>
+        {c.specs.notas.length > 0 && (
+          <ul class="notas">
+            {c.specs.notas.map((n) => <li><Flor tam={10} /> <span>{n}</span></li>)}
+          </ul>
+        )}
+      </div>
+      <div>
+        {tabla.length > 0 ? (
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>{subs.length > 1 ? 'Tipo' : 'Pieza'}</th><th>Formato</th><th>Medida</th><th>Rendimiento</th></tr></thead>
+              <tbody>
+                {tabla.map((fila) => fila.formatos.map((f, i) => (
+                  <tr>
+                    {i === 0 ? <td rowspan={fila.formatos.length} class="tipo">{fila.sub.nombre}</td> : null}
+                    <td>{String(f.formato).replace(/X/g, ' × ')}</td>
+                    <td>{f.medida || medida(f.formato)}</td>
+                    <td>{f.pz_m2 ? `${f.pz_m2} pzas / m²` : c.slug === 'terminaciones' && /CM/.test(String(f.formato)) ? (String(f.formato).startsWith('10') ? '10 pzas / m lineal' : '7 pzas / m lineal') : '—'}</td>
+                  </tr>
+                )))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div class="sin-tabla">
+            <p>Formatos y medidas según existencia. Escríbenos con tu proyecto y te decimos qué hay y cuánto necesitas.</p>
+          </div>
+        )}
+        <p class="specs-aviso">Producto artesanal: variaciones de color y medida de hasta 5% entre piezas. Considera una merma de hasta 5% por traslados y cortes.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------------- cierre -->
+  <section class="cierre">
+    <div class="contenedor cierre-grid">
+      <div>
+        <h2>¿Te interesa alguna pieza?</h2>
+        <p>Mándanos el nombre tal como aparece en la galería, las medidas del espacio y te cotizamos. Sin carrito: cada proyecto se atiende en persona.</p>
+      </div>
+      <div class="cierre-botones">
+        <a class="boton" href={waHref(`Hola, vi ${c.nombre.toLowerCase()} en su página y quiero cotizar.`)} target="_blank" rel="noopener">WhatsApp {CONTACTO.whatsappBonito}</a>
+        <a class="boton hueco" href={telHref(CONTACTO.telefonos[0])}>Tel. {CONTACTO.telefonos[0]}</a>
+        <a class="boton hueco" href={`mailto:${CONTACTO.correo}?subject=${encodeURIComponent('Cotización · ' + c.nombre)}`}>Correo</a>
+      </div>
+    </div>
+  </section>
+
+  {vecinos.length > 0 && (
+    <section class="contenedor vecinos">
+      <a class="ceja" href={`/catalogo/${g.slug}/`}>También en {c.grupo.toLowerCase()} →</a>
+      <div class="vec-lista">
+        {vecinos.map((v) => <a href={`/${v.slug}/`}><b>{v.nombre}</b><span>{v.lema}</span></a>)}
+      </div>
+    </section>
+  )}
 
   <style>
-    .rejilla-cat {
-      display: grid; gap: 46px 32px;
-      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-    }
-    .rejilla-cat .sub-t { grid-column: 1 / -1; }
-    @media (max-width: 520px) {
-      .rejilla-cat { grid-template-columns: repeat(2, 1fr); gap: 30px 18px; }
-    }
-    .vacio-filtro { margin: 40px 0; color: var(--tenue); }
+    .miga { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); padding: 26px 0 0; }
+    .miga span { margin: 0 6px; color: var(--arena); }
+    .miga a:hover { color: var(--terracota); }
+    .cab { padding: 26px 0 30px; max-width: 760px; }
+    .cab h1 { margin-top: 14px; }
+    .lema { margin-top: 12px; font-family: var(--serif); font-size: 24px; font-style: italic; font-weight: 500; color: var(--terracota); }
+    .intro { margin-top: 12px; color: var(--tenue); }
 
-    .cab { padding: 18px 0 30px; }
-    .cab h1 { font-size: clamp(30px, 4.5vw, 46px); font-weight: 700; }
-    .cab p { margin: 10px 0 0; color: var(--tenue); font-size: 16px; }
-    .cab b { color: var(--carbon); font-weight: 600; }
-    .subs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 40px; }
-    .subs a {
-      padding: 8px 16px; border: 1px solid var(--linea); border-radius: 999px;
-      font-size: 14px; font-weight: 500; background: #fff;
+    /* ----------------------------------------------------------- filtros */
+    .filtros { position: sticky; top: 74px; z-index: 5; background: rgba(250,246,239,.96); backdrop-filter: blur(8px); padding: 14px 0 12px; border-top: 1px solid var(--linea); border-bottom: 1px solid var(--linea); margin-bottom: 26px; }
+    .fila { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .subs { margin-bottom: 10px; }
+    .pastilla {
+      padding: 8px 14px; border: 1px solid var(--linea); border-radius: 999px; background: var(--blanco);
+      font-size: 12px; font-weight: 500; letter-spacing: .04em; cursor: pointer; color: var(--cacao);
+      transition: border-color .15s ease, background .15s ease, color .15s ease;
     }
-    .subs a:hover { border-color: var(--indigo); color: var(--indigo); }
-    .subs span { color: var(--tenue); font-size: 12px; }
-    .sub-t {
-      display: flex; align-items: baseline; justify-content: space-between;
-      gap: 16px; margin-bottom: 18px; font-size: 20px; font-weight: 600;
-    }
-    .ver { font-size: 13px; font-weight: 500; color: var(--indigo); white-space: nowrap; }
+    .pastilla small { font-size: 11px; color: var(--tenue); font-weight: 400; margin-left: 2px; }
+    .pastilla:hover { border-color: var(--terracota); }
+    .pastilla.on { background: var(--cacao); border-color: var(--cacao); color: var(--marfil); }
+    .pastilla.pronto { background: transparent; color: var(--tenue); border-style: dashed; cursor: default; }
+    .pastilla.on small { color: var(--arena); }
+    .et { font-size: 10px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--tenue); margin-right: 4px; }
+    .gota { border: 0; background: none; padding: 0; cursor: pointer; line-height: 0; }
+    .disco { display: block; width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(60,42,36,.18); box-shadow: 0 0 0 2px var(--marfil), 0 0 0 2px transparent; transition: box-shadow .15s ease, transform .15s ease; }
+    .gota:hover .disco { transform: scale(1.1); }
+    .gota.on .disco { box-shadow: 0 0 0 2px var(--marfil), 0 0 0 4px var(--terracota); }
+    .tonos { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 10px; padding: 10px 12px; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); }
+    .gota.chica { display: inline-flex; align-items: center; gap: 6px; }
+    .gota.chica .disco { width: 18px; height: 18px; }
+    .etiq { font-size: 12px; color: var(--cacao); line-height: 1; }
+    .quitar { margin-left: auto; padding: 7px 12px; border: 1px solid var(--terracota); border-radius: 999px; background: none; color: var(--terracota); font-size: 12px; font-weight: 500; cursor: pointer; }
+    .quitar:hover { background: var(--terracota); color: var(--marfil); }
+    .quitar.suelto { margin: 6px 0 0; }
+    .resumen { margin-top: 10px; font-size: 12px; color: var(--tenue); }
+    .resumen b { color: var(--cacao); font-weight: 600; }
+    @media (max-width: 900px) { .filtros { top: 66px; } }
+
+    /* ----------------------------------------------------------- galeria */
+    .galeria { display: grid; gap: 30px 20px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+    @media (max-width: 560px) { .galeria { grid-template-columns: repeat(2, 1fr); gap: 20px 12px; } }
+    .vacio { padding: 50px 0; color: var(--tenue); }
+    .liga { border: 0; background: none; padding: 0; color: var(--terracota); font: inherit; cursor: pointer; text-decoration: underline; }
+
+    .en-tienda { text-align: center; padding: 30px 20px 50px; max-width: 560px; margin: 0 auto; }
+    .en-tienda img { width: 120px; height: auto; margin: 0 auto 18px; opacity: .8; }
+    .en-tienda p { margin-top: 12px; color: var(--tenue); }
+    .botones { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 26px; }
+
+    /* ------------------------------------------------------------- specs */
+    .specs { margin-top: 90px; padding: 80px 0; background: var(--arena-claro); border-top: 1px solid var(--linea); border-bottom: 1px solid var(--linea); }
+    .specs-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 50px; }
+    .specs h2 { margin-top: 14px; }
+    .specs-intro { margin-top: 16px; color: var(--tenue); }
+    .notas { list-style: none; margin: 22px 0 0; padding: 0; }
+    .notas li { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-top: 1px solid var(--linea); font-size: 14px; }
+    .notas li .flor { margin-top: 5px; }
+    .tabla-envoltura { overflow-x: auto; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; padding: 12px 16px; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--terracota); border-bottom: 1px solid var(--linea); font-weight: 600; }
+    td { padding: 11px 16px; border-bottom: 1px solid var(--linea); vertical-align: top; }
+    tr:last-child td { border-bottom: 0; }
+    td.tipo { font-family: var(--serif); font-size: 18px; font-weight: 600; }
+    .sin-tabla { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 24px; color: var(--tenue); }
+    .specs-aviso { margin-top: 14px; font-size: 12px; color: var(--tenue); }
+    @media (max-width: 860px) { .specs-grid { grid-template-columns: 1fr; gap: 30px; } }
+
+    /* ------------------------------------------------------------ cierre */
+    .cierre { padding: 80px 0 0; }
+    .cierre-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; }
+    .cierre p { margin-top: 14px; color: var(--tenue); max-width: 520px; }
+    .cierre-botones { display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-end; }
+    @media (max-width: 860px) { .cierre-grid { grid-template-columns: 1fr; } .cierre-botones { justify-content: flex-start; } }
+
+    .vecinos { margin-top: 70px; }
+    .vec-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 16px; }
+    .vec-lista a { padding: 18px 20px; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--blanco); transition: border-color .15s ease; }
+    .vec-lista a:hover { border-color: var(--terracota); }
+    .vec-lista b { display: block; font-family: var(--serif); font-size: 22px; font-weight: 600; }
+    .vec-lista span { display: block; margin-top: 4px; font-size: 13px; color: var(--tenue); }
   </style>
 </Base>

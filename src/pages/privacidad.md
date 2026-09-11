@@ -3,10 +3,10 @@ layout: ../layouts/Texto.astro
 titulo: Aviso de privacidad
 ---
 
-# AVISO DE PRIVACIDAD
+# Aviso de privacidad
 
-**Bodega de Talavera**
-Última actualización: 3 de septiembre de 2026
+**Rústicos Artesanales**
+Última actualización: 10 de septiembre de 2026
 
 ## 1. Quién es responsable de tus datos
 
@@ -14,40 +14,37 @@ titulo: Aviso de privacidad
 
 ## 2. Qué datos recabamos
 
-Para poder venderte y entregarte, recabamos:
+Este sitio es un escaparate: **no tiene carrito ni pagos en línea** y no te pide registrarte. Los datos que llegamos a recabar son los que tú nos compartes cuando nos escribes por WhatsApp, correo o teléfono para cotizar:
 
-- **Identificación:** nombre completo.
+- **Identificación:** nombre.
 - **Contacto:** teléfono, correo electrónico.
-- **Entrega:** dirección completa, código postal, referencias del domicilio.
+- **Entrega**, solo si pides envío: dirección completa, código postal, referencias del domicilio.
 - **Fiscales**, solo si pides factura: RFC, razón social, régimen fiscal, uso de CFDI.
 
-**No recabamos ni almacenamos datos de tarjetas bancarias.** Los pagos se procesan directamente en Mercado Pago y PayPal, que operan bajo sus propias políticas de privacidad y estándares de seguridad. Nosotros solo recibimos la confirmación de que el pago se realizó.
-
-**No recabamos datos personales sensibles.**
+**No recabamos ni almacenamos datos de tarjetas bancarias** a través de este sitio. **No recabamos datos personales sensibles.**
 
 ## 3. Para qué los usamos
 
-**Finalidades necesarias** (sin estas no podemos venderte):
+**Finalidades necesarias:**
 
-- Procesar tu pedido y confirmarlo.
-- Coordinar y realizar la entrega.
+- Cotizar y atender tu pedido.
+- Coordinar la entrega o la recolección en tienda.
 - Emitir tu factura cuando la solicites.
-- Atender dudas, aclaraciones, cambios o devoluciones.
+- Atender dudas, aclaraciones y cambios.
 - Cumplir con obligaciones fiscales y legales.
 
-**Finalidades adicionales** (puedes negarte sin que afecte tu compra):
+**Finalidades adicionales** (puedes negarte sin que afecte tu atención):
 
-- Enviarte novedades de producto, promociones y contenido de la marca.
+- Enviarte novedades de producto y contenido de la marca.
 - Evaluar la calidad del servicio.
 
-Si no quieres que usemos tus datos para las finalidades adicionales, escríbenos a **info@bodegadetalavera.com** y lo desactivamos.
+Si no quieres que usemos tus datos para las finalidades adicionales, escríbenos a **info@rusticosartesanalescdmx.com** y lo desactivamos.
 
 ## 4. Con quién los compartimos
 
 Compartimos únicamente lo indispensable, y solo con:
 
 - **Empresas de transporte y paquetería**, para entregarte tu pedido (nombre, teléfono y dirección).
-- **Plataformas de pago** (Mercado Pago, PayPal), para procesar el cobro.
 - **Autoridades**, cuando exista requerimiento fundado y motivado.
 
 **No vendemos ni rentamos tus datos a terceros.** Estas transferencias no requieren tu consentimiento conforme al artículo 37 de la LFPDPPP.
@@ -56,7 +53,7 @@ Compartimos únicamente lo indispensable, y solo con:
 
 Tienes derecho a **Acceder** a tus datos, **Rectificarlos** si son inexactos, **Cancelarlos** cuando consideres que no se requieren, y **Oponerte** a su uso para fines específicos. También puedes revocar tu consentimiento.
 
-Para ejercerlos, envía a **info@bodegadetalavera.com** una solicitud que incluya:
+Para ejercerlos, envía a **info@rusticosartesanalescdmx.com** una solicitud que incluya:
 
 1. Tu nombre y un correo o teléfono para responderte.
 2. Copia de una identificación oficial.
@@ -66,7 +63,7 @@ Para ejercerlos, envía a **info@bodegadetalavera.com** una solicitud que incluy
 
 ## 6. Cookies
 
-El sitio usa cookies y tecnologías similares para recordar tu carrito y entender cómo se navega el catálogo. Puedes desactivarlas desde la configuración de tu navegador; si lo haces, es posible que el carrito no funcione correctamente.
+Este sitio no usa cookies de rastreo ni de publicidad. Solo puede guardar en tu navegador el filtro que elegiste en la galería, para que la liga se pueda compartir.
 
 ## 7. Cambios a este aviso
 
@@ -75,4 +72,4 @@ Podemos actualizar este aviso por cambios legales, en nuestros servicios o en nu
 ---
 
 **Contacto para cualquier duda sobre privacidad:**
-info@bodegadetalavera.com · WhatsApp [+52 55 5414 7383](https://wa.me/525554147383)
+info@rusticosartesanalescdmx.com · WhatsApp [+52 55 6501 5280](https://wa.me/525565015280)

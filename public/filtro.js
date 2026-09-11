@@ -1,57 +1,137 @@
-/** Filtro por familia de color y por tono. `mapa` es url -> [colores].
- *  `fams` es color -> familia. Oculta bloques que se quedan sin productos. */
+/** Filtros de la galeria: subcategoria + familia de color + tono.
+ *  `mapa` es id -> { sub, colores[] }; `fams` es color -> familia.
+ *  Todo pasa en el navegador sobre la galeria ya pintada: sin peticiones. */
 export function montarFiltro(mapa, fams) {
-  const fila = document.querySelector('.filtro-color');
-  if (!fila) return;
-  const tarjetas = [...document.querySelectorAll('.tarjeta')];
-  const bloques = [...document.querySelectorAll('.bloque')];
+  const piezas = [...document.querySelectorAll('.pieza')];
   const vacio = document.querySelector('.vacio-filtro');
+  const cuenta = document.getElementById('cuenta-filtro');
   const btnQuitar = document.getElementById('quitar-filtro');
+  const estado = { sub: '', fam: '', color: '' };
 
-  function aplicar(fam, color) {
-    if (btnQuitar) btnQuitar.hidden = !fam && !color;
-    tarjetas.forEach((t) => {
-      const url = t.getAttribute('href').split('/').filter(Boolean).pop();
-      const cs = mapa[url] || [];
-      const ok = color ? cs.includes(color) : fam ? cs.some((c) => fams[c] === fam) : true;
-      t.hidden = !ok;
+  function aplicar() {
+    let n = 0;
+    piezas.forEach((el) => {
+      const d = mapa[el.dataset.id] || { sub: '', colores: [] };
+      const okSub = !estado.sub || d.sub === estado.sub;
+      const cs = d.colores || [];
+      const okColor = estado.color
+        ? cs.includes(estado.color)
+        : estado.fam ? cs.some((c) => fams[c] === estado.fam) : true;
+      const ok = okSub && okColor;
+      el.hidden = !ok;
+      if (ok) n++;
     });
-    bloques.forEach((bl) => {
-      bl.hidden = ![...bl.querySelectorAll('.tarjeta')].some((t) => !t.hidden);
-    });
-    if (vacio) vacio.hidden = tarjetas.some((t) => !t.hidden);
+    if (vacio) vacio.hidden = n > 0;
+    if (cuenta) cuenta.textContent = n;
+    const activo = !!(estado.sub || estado.fam || estado.color);
+    if (btnQuitar) btnQuitar.hidden = !activo;
+    // la URL recuerda el filtro para poder compartirlo
+    const u = new URL(location.href);
+    ['sub', 'fam', 'color'].forEach((k) => (estado[k] ? u.searchParams.set(k, estado[k]) : u.searchParams.delete(k)));
+    history.replaceState(null, '', u);
   }
 
-  // familia
-  document.querySelectorAll('.fila .gota, .fila .pastilla').forEach((b) =>
-    b.addEventListener('click', () => {
-      document.querySelectorAll('.fila .gota, .fila .pastilla').forEach((x) => x.classList.remove('on'));
-      b.classList.add('on');
-      const fam = b.dataset.fam || '';
-      document.querySelectorAll('.tonos').forEach((t) => (t.hidden = t.dataset.de !== fam));
-      document.querySelectorAll('.tonos .pastilla-tono').forEach((x) => x.classList.add('on'));
-      document.querySelectorAll('.tonos .gota').forEach((x) => x.classList.remove('on'));
-      aplicar(fam, '');
-    })
-  );
-
-  // tono dentro de la familia
-  document.querySelectorAll('.tonos .gota, .tonos .pastilla-tono').forEach((b) =>
-    b.addEventListener('click', () => {
-      const caja = b.closest('.tonos');
-      caja.querySelectorAll('.gota, .pastilla-tono').forEach((x) => x.classList.remove('on'));
-      b.classList.add('on');
-      aplicar(b.dataset.fam, b.dataset.color || '');
-    })
-  );
-
-  // quitar el filtro y volver a verlo todo
-  if (btnQuitar) {
-    btnQuitar.addEventListener('click', () => {
-      document.querySelectorAll('.fila .gota').forEach((x) => x.classList.remove('on'));
-      document.querySelector('.fila .pastilla').classList.add('on');
-      document.querySelectorAll('.tonos').forEach((t) => (t.hidden = true));
-      aplicar('', '');
-    });
+  function pintar() {
+    document.querySelectorAll('[data-sub-btn]').forEach((b) =>
+      b.classList.toggle('on', (b.dataset.subBtn || '') === estado.sub));
+    document.querySelectorAll('[data-fam-btn]').forEach((b) =>
+      b.classList.toggle('on', (b.dataset.famBtn || '') === estado.fam));
+    document.querySelectorAll('.tonos').forEach((t) => (t.hidden = t.dataset.de !== estado.fam || !estado.fam));
+    document.querySelectorAll('[data-color-btn]').forEach((b) =>
+      b.classList.toggle('on', (b.dataset.colorBtn || '') === estado.color && b.dataset.famBtn === undefined));
+    aplicar();
   }
+
+  document.querySelectorAll('[data-sub-btn]').forEach((b) =>
+    b.addEventListener('click', () => { estado.sub = b.dataset.subBtn || ''; pintar(); }));
+  document.querySelectorAll('[data-fam-btn]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const f = b.dataset.famBtn || '';
+      estado.fam = estado.fam === f ? '' : f;
+      estado.color = '';
+      pintar();
+    }));
+  document.querySelectorAll('[data-color-btn]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const c = b.dataset.colorBtn || '';
+      estado.color = estado.color === c ? '' : c;
+      pintar();
+    }));
+  if (btnQuitar) btnQuitar.addEventListener('click', () => {
+    estado.sub = estado.fam = estado.color = '';
+    pintar();
+  });
+
+  // filtro que viene en la URL (liga compartida o "regresar")
+  const u = new URL(location.href);
+  estado.sub = u.searchParams.get('sub') || '';
+  estado.fam = u.searchParams.get('fam') || '';
+  estado.color = u.searchParams.get('color') || '';
+  if (estado.color && !estado.fam) estado.fam = fams[estado.color] || '';
+  pintar();
+}
+
+/** Visor: clic en una pieza la amplia. Flechas y Esc funcionan; en celular
+ *  se desliza. No hay pagina por producto (brief): esto es todo el detalle. */
+export function montarVisor() {
+  const visor = document.getElementById('visor');
+  if (!visor) return;
+  const img = visor.querySelector('img');
+  const pie = visor.querySelector('.visor-pie');
+  const sub = visor.querySelector('.visor-sub');
+  const cerrar = visor.querySelector('.visor-cerrar');
+  const prev = visor.querySelector('.visor-prev');
+  const next = visor.querySelector('.visor-next');
+  let lista = [], i = 0, ultimo = null;
+
+  const visibles = () => [...document.querySelectorAll('.pieza')].filter((p) => !p.hidden);
+
+  function mostrar(k) {
+    i = (k + lista.length) % lista.length;
+    const el = lista[i];
+    const fotos = (el.dataset.fotos || el.querySelector('img').src).split('|');
+    img.src = fotos[0];
+    img.alt = el.dataset.nombre || '';
+    pie.textContent = el.dataset.nombre || '';
+    sub.textContent = el.dataset.sub || '';
+    prev.hidden = next.hidden = lista.length < 2;
+  }
+  function abrir(el) {
+    lista = visibles();
+    ultimo = document.activeElement;
+    visor.hidden = false;
+    document.body.style.overflow = 'hidden';
+    mostrar(lista.indexOf(el));
+    requestAnimationFrame(() => visor.classList.add('on'));
+    cerrar.focus();
+  }
+  function salir() {
+    visor.classList.remove('on');
+    document.body.style.overflow = '';
+    setTimeout(() => { visor.hidden = true; img.src = ''; }, 250);
+    if (ultimo && ultimo.focus) ultimo.focus();
+  }
+
+  document.querySelectorAll('.pieza').forEach((el) => {
+    el.addEventListener('click', (e) => { e.preventDefault(); abrir(el); });
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(el); } });
+  });
+  cerrar.addEventListener('click', salir);
+  prev.addEventListener('click', () => mostrar(i - 1));
+  next.addEventListener('click', () => mostrar(i + 1));
+  visor.addEventListener('click', (e) => { if (e.target === visor || e.target.classList.contains('visor-marco')) salir(); });
+  document.addEventListener('keydown', (e) => {
+    if (visor.hidden) return;
+    if (e.key === 'Escape') salir();
+    else if (e.key === 'ArrowLeft') mostrar(i - 1);
+    else if (e.key === 'ArrowRight') mostrar(i + 1);
+  });
+  let x0 = null;
+  visor.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+  visor.addEventListener('touchend', (e) => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 50) mostrar(dx < 0 ? i + 1 : i - 1);
+    x0 = null;
+  }, { passive: true });
 }

@@ -1,105 +1,129 @@
-import bruto from '../data/productos.json';
+import bruto from '../data/galeria.json';
 import hex from '../data/colores.json';
+import FAM from '../data/familias.json';
 
 export const COLORES = hex;
 
-/** Un producto puede ser bicolor: "Azul / Terracota". */
-export const coloresDe = (p) =>
-  (p.color || '').split('/').map((c) => c.trim()).filter(Boolean);
+// ------------------------------------------------------------------ CONTACTO
+// Datos del brief 2026-09-10. Un solo lugar: cabecera, pie, /contacto y los
+// botones de WhatsApp leen de aqui.
+export const CONTACTO = {
+  nombre: 'Rústicos Artesanales',
+  descriptor: 'Acabados artesanales para tu proyecto',
+  direccion: 'Av. División del Norte 2604, San Diego Churubusco, Coyoacán, 04120, CDMX',
+  direccionCorta: 'Av. División del Norte 2604, Coyoacán',
+  telefonos: ['55 5605 0514', '55 7090 4623'],
+  whatsapp: '52 55 6501 5280',
+  whatsappBonito: '+52 55 6501 5280',
+  correo: 'info@rusticosartesanalescdmx.com',
+  horario: [
+    { dias: 'Lunes a viernes', horas: '9:00 – 19:00' },
+    { dias: 'Sábados', horas: '9:00 – 16:00' },
+  ],
+  instagram: 'https://www.instagram.com/rusticosartesanalescdmx/',
+  facebook: 'https://www.facebook.com/RusticosArtesanales/',
+  usuario: '@rusticosartesanalescdmx',
+  mapsGoogle: 'https://maps.google.com/?q=Av.+Divisi%C3%B3n+del+Norte+2604%2C+San+Diego+Churubusco%2C+Coyoac%C3%A1n%2C+04120+Ciudad+de+M%C3%A9xico',
+  mapsApple: 'https://maps.apple.com/?q=Av.+Divisi%C3%B3n+del+Norte+2604%2C+Coyoac%C3%A1n%2C+Ciudad+de+M%C3%A9xico',
+  mapaEmbed: 'https://maps.google.com/maps?q=Av.%20Divisi%C3%B3n%20del%20Norte%202604%2C%20Coyoac%C3%A1n%2C%20CDMX&z=16&output=embed',
+};
 
-/** Nombres del catalogo en MAYUSCULAS -> texto legible, sin perder acentos. */
-export function bonito(s) {
-  if (!s) return '';
-  return String(s)
-    .toLowerCase()
-    .split(' ')
-    .map((w) => (w.length > 2 || /^\d/.test(w) ? w.charAt(0).toUpperCase() + w.slice(1) : w))
-    .join(' ')
-    .replace(/\b(\d+)x(\d+)\b/gi, '$1×$2');
-}
+const tel = (t) => 'tel:+52' + t.replace(/\s+/g, '');
+export const telHref = tel;
+export const waHref = (texto) =>
+  `https://wa.me/${CONTACTO.whatsapp.replace(/\s+/g, '')}` +
+  (texto ? `?text=${encodeURIComponent(texto)}` : '');
 
-/** El PRODUCTO trae prefijos que la navegacion ya dice. Se recortan. */
-const PREFIJOS = [/^CINTILLA\s+/i, /^DECORADO\s+/i, /^RELIEVE\s+/i, /^TERMINACION\s+/i, /^AZULEJO\s+/i];
-export function nombreCorto(p) {
-  let n = p.producto || '';
-  for (const re of PREFIJOS) n = n.replace(re, '');
-  return bonito(n);
-}
-
-export const productos = bruto.map((p) => ({
-  ...p,
-  nombre: nombreCorto(p) +
-    (p.cat === 'cintilla' ? ' ' + bonito(p.formatos[0].formato) : ''),
-  foto: '/' + p.foto.replace(/^FOTOS PRODUCTOS\//i, 'fotos/'),
-  galeria: (p.galeria || []).map((g) => '/' + g.replace(/^FOTOS PRODUCTOS\//i, 'fotos/')),
-  desde: Math.min(...p.formatos.map((f) => f.precio_venta)),
-  colores: (p.color || '').split('/').map((c) => c.trim()).filter(Boolean),
-}));
-
-/** Fotos de obra propias de RAAC (carpeta HERO BT). `url` = ficha que retratan.
- *  Viven aqui, no en la home, porque la ficha del producto tambien las usa:
- *  la foto instalada entra a SU galeria interna (Alek 2026-09-03). */
-export const OBRA = [
-  { foto: 'cintilla-rojo-brillante-en-espiga', pie: 'Cintilla rojo brillante, colocada en espiga', url: 'brillante-cintilla-rojo-5x20', portada: true },
-  { foto: 'arlequin-verde-y-cintillas-blanco-y-verde', pie: 'Arlequín verde con cintillas blanco y verde', url: 'decorado-arlequin-verde' },
-  { foto: 'espanolita-jade', pie: 'Españolita jade', url: 'mate-espanolito-jade' },
-  { foto: 'escamas-azul-deslavado', pie: 'Escamas azul deslavado', url: 'deslavado-escama-azul-cobalto' },
-  { foto: 'azulejo-vino', pie: 'Azulejo vino', url: 'liso-vino' },
-  { foto: 'azulejo-verde-deslavado', pie: 'Azulejo verde deslavado', url: 'deslavado-verde' },
-  { foto: 'azulejo-azul', pie: 'Azulejo azul', url: 'especial-azul' },
-  { foto: 'cintilla-verde-especial-en-espiga', pie: 'Cintilla verde especial en espiga', url: null },
-  { foto: 'cintilla-azul-deslavado-ladrillo', pie: 'Cintilla azul deslavado en ladrillo', url: null },
-  { foto: 'cintilla-naranja', pie: 'Cintilla naranja', url: null },
-].filter((o) => !o.url || productos.some((x) => x.url === o.url));
-
-/** Las fotos de obra que retratan ESTE producto, listas para su galeria. */
-export const ambiente = (p) =>
-  OBRA.filter((o) => o.url === p.url).map((o) => `/fotos/hero/${o.foto}.webp`);
-
+// --------------------------------------------------------------------- ARBOL
+// El arbol del SITIO: comercial y corto, con los nombres de cara al cliente.
+// NO es el del CATALOGO MAESTRO (interno) y no se fuerza que coincidan.
+//
+// ⚠ PROPUESTA (brief 2026-09-10, bloqueante abierto): falta que Alek/Federico
+// confirmen la lista y los nombres del menu. Se cambia AQUI y en
+// generar_galeria.py (clasificar) y todo el sitio se reacomoda solo.
+//
+// `specs` son las especificaciones tecnicas de formatos de la categoria: lo
+// que se puede sostener con el catalogo. Los formatos y piezas por m² se
+// calculan de la galeria; aqui van solo las notas fijas.
 export const ARBOL = [
   {
-    slug: 'azulejo', nombre: 'Azulejo',
-    lema: 'El liso de siempre, en 40 colores.',
+    slug: 'talavera-lisa', nombre: 'Talavera lisa', grupo: 'Talavera',
+    portada: ['especial azul', 'azul colonial', 'liso azul'],
+    lema: 'Un solo color, esmaltado. La base de todo.',
     subs: [
-      { slug: 'esmaltados', nombre: 'Esmaltados' },
-      { slug: 'deslavados', nombre: 'Deslavados' },
-      { slug: 'mates', nombre: 'Mates' },
+      { slug: 'esmaltada', nombre: 'Esmaltada' },
+      { slug: 'deslavada', nombre: 'Deslavada' },
+      { slug: 'mate', nombre: 'Mate' },
     ],
+    specs: {
+      intro: 'Azulejo de barro esmaltado, de talleres de Dolores Hidalgo. Se instala en muros, cocinas, baños, escaleras y fachadas.',
+      notas: [
+        'La caja de talavera trae 1 m² en todos los formatos.',
+        'El 10 × 10 mide 10.8 × 10.8 cm reales.',
+        'Producto artesanal: variaciones de color y medida de hasta 5% entre piezas.',
+      ],
+    },
   },
   {
-    slug: 'decorados', nombre: 'Decorados',
-    lema: 'Pintados a mano, uno por uno.',
+    slug: 'talavera-decorada', nombre: 'Talavera decorada', grupo: 'Talavera',
+    portada: ['cupula azul', 'girasol azul'],
+    lema: 'Un diseño por pieza, en la carta de colores de la talavera.',
     subs: [
       { slug: 'sencillo', nombre: 'Sencillo' },
       { slug: 'elaborado', nombre: 'Elaborado' },
       { slug: 'ilustrado', nombre: 'Ilustrado' },
     ],
+    specs: {
+      intro: 'Diseños tradicionales y contemporáneos decorados sobre azulejo de talavera. Se combinan con la talavera lisa del mismo color.',
+      notas: [
+        'La caja trae 1 m² en todos los formatos.',
+        'El diseño es el producto: cada diseño se pinta en los colores que se muestran.',
+        'Variaciones de color y trazo de hasta 5% entre piezas: es un producto artesanal.',
+      ],
+    },
   },
   {
-    slug: 'relieve', nombre: 'Relieve',
+    slug: 'relieve', nombre: 'Relieve', grupo: 'Talavera',
     lema: 'Textura que se siente con la mano.',
     subs: [
       { slug: 'clasico', nombre: 'Clásico' },
       { slug: 'mate', nombre: 'Mate' },
+      { slug: 'especiales', nombre: 'Especiales' },
     ],
+    portada: ['rosario colores', 'cuerda', 'frida'],
+    specs: {
+      intro: 'Azulejo con el diseño en relieve. Se usa en cenefas, muros de acento y fachadas.',
+      notas: ['La caja trae 1 m² en todos los formatos.'],
+    },
   },
   {
-    slug: 'boutique', nombre: 'Boutique',
+    slug: 'boutique', nombre: 'Boutique', grupo: 'Talavera',
     lema: 'Formas que rompen la cuadrícula.',
     subs: [
       { slug: 'escama', nombre: 'Escama' },
       { slug: 'espanolito', nombre: 'Españolito' },
-      { slug: 'espanola', nombre: 'Española' },
       { slug: 'hexagonito', nombre: 'Hexagonito' },
-      { slug: 'hexagono', nombre: 'Hexágono' },
-      { slug: 'hexagono-concha', nombre: 'Hexágono Concha' },
-      { slug: 'gota', nombre: 'Gota' },
-      { slug: 'hoja', nombre: 'Hoja' },
     ],
+    portada: ['escama deslavado azul', 'escama azul', 'hexagonito azul'],
+    specs: {
+      intro: 'Piezas de talavera en formas especiales, en los mismos acabados y colores del azulejo liso. Se venden por pieza.',
+      notas: ['Cada forma tiene su propio rendimiento por m²; lo indicamos por forma.'],
+    },
   },
   {
-    slug: 'cintilla', nombre: 'Cintilla',
-    lema: 'La franja que remata el muro.',
+    slug: 'texturizados', nombre: 'Texturizados', grupo: 'Talavera',
+    portada: ['verde', 'azul', 'terracota'],
+    lema: 'Estriado y petatillo: relieve fino sobre el liso.',
+    subs: [{ slug: 'estriado', nombre: 'Estriado' }, { slug: 'petatillo', nombre: 'Petatillo' }],
+    specs: {
+      intro: 'Azulejo liso con textura fina en la superficie. Misma carta de colores que la talavera lisa.',
+      notas: ['La caja trae 1 m² en todos los formatos.'],
+    },
+  },
+  {
+    slug: 'cintillas', nombre: 'Cintillas', grupo: 'Talavera',
+    portada: ['terracota', 'vino', 'rojo'],
+    lema: 'La franja que remata o dibuja el muro.',
     subs: [
       { slug: '5x10', nombre: '5 × 10 cm' },
       { slug: '5x15', nombre: '5 × 15 cm' },
@@ -108,104 +132,224 @@ export const ARBOL = [
       { slug: '7x20', nombre: '7 × 20 cm' },
       { slug: '10x20', nombre: '10 × 20 cm' },
     ],
+    specs: {
+      intro: 'Tiras de talavera en seis medidas. Se colocan en espiga, ladrillo o corrido, solas o combinadas con azulejo.',
+      notas: ['Mismo barro y esmalte que el azulejo: los colores coinciden.'],
+    },
   },
   {
-    slug: 'texturizado', nombre: 'Texturizado',
-    lema: 'Estriado y petatillo: relieve fino en el liso.',
-    subs: [{ slug: 'estriado', nombre: 'Estriado' }, { slug: 'petatillo', nombre: 'Petatillo' }],
-  },
-  {
-    slug: 'terminaciones', nombre: 'Terminaciones',
+    slug: 'terminaciones', nombre: 'Terminaciones', grupo: 'Talavera',
+    portada: ['ángulo verde especial', 'angulo verde', 'verde especial', 'vino'],
     lema: 'La pieza que cierra el muro.',
     subs: [
       { slug: 'angulo', nombre: 'Ángulo' },
       { slug: 'bagueta', nombre: 'Bagueta' },
       { slug: 'remate', nombre: 'Remate' },
       { slug: 'codo', nombre: 'Codo' },
+      { slug: 'una', nombre: 'Uña' },
       { slug: 'lapiz', nombre: 'Lápiz' },
       { slug: 'listelo', nombre: 'Listelo' },
-      { slug: 'pecho-paloma', nombre: 'Pecho Paloma' },
+      { slug: 'pecho-paloma', nombre: 'Pecho paloma' },
       { slug: 'trenza', nombre: 'Trenza' },
     ],
+    specs: {
+      intro: 'Molduras y remates de talavera en el mismo color y acabado del azulejo, para cerrar cantos, esquinas y cenefas.',
+      notas: [
+        'Se venden por pieza: las de 10 cm rinden 10 piezas por metro lineal y las de 15 cm, 7.',
+        'Codo y uña son piezas sueltas para esquinas: no forman corrida.',
+      ],
+    },
   },
   {
-    slug: 'pegazulejo', nombre: 'Pegazulejo',
-    lema: 'Lo que necesitas para pegarlo.',
-    subs: [{ slug: 'pegazulejo', nombre: 'Pegazulejo' }],
+    slug: 'lavabos', nombre: 'Lavabos', grupo: 'Baño',
+    portada: ['canoa girasol', 'dona'],
+    lema: 'Talavera que se usa todos los días.',
+    subs: [{ slug: 'lavabo', nombre: 'Lavabos' }],
+    specs: {
+      intro: 'Lavabos de talavera decorados: dona, canoa, aguamanil y sobreponer. Van con cualquier mueble o cubierta.',
+      notas: ['Medidas de referencia: dona 40 cm de diámetro × 12 cm; canoa 54 × 38 × 11 cm.', 'Cada lavabo se decora pieza por pieza: el diseño puede variar ligeramente entre una y otra.'],
+    },
+  },
+  {
+    slug: 'muebles-de-bano', nombre: 'Muebles de baño', grupo: 'Baño',
+    portada: ['romano girasol', 'romano'],
+    lema: 'Un mueble, muchos lavabos.',
+    subs: [{ slug: 'mueble', nombre: 'Muebles' }],
+    specs: {
+      intro: 'Muebles de herrería y madera con cubierta de talavera, pensados para combinar con el lavabo y el azulejo.',
+      notas: ['Tamaños: micro 40 × 40, mini 50 × 45, mediano 60 × 50 y grande 65 × 51 cm (varían por modelo).'],
+    },
+  },
+  {
+    slug: 'wc-decorados', nombre: 'WC decorados', grupo: 'Baño',
+    portada: ['cupula azul', 'girasol'],
+    lema: 'El baño completo, en talavera.',
+    subs: [{ slug: 'wc', nombre: 'WC' }],
+    specs: {
+      intro: 'Sanitarios decorados con los mismos diseños de los lavabos y la talavera decorada.',
+      notas: ['Se decoran bajo pedido en el diseño y color que elijas.'],
+    },
+  },
+  {
+    slug: 'barro', nombre: 'Barro', grupo: 'Pisos',
+    portada: ['san felipe'],
+    lema: 'Loseta y ladrillo de barro natural.',
+    subs: [{ slug: 'loseta', nombre: 'Losetas' }],
+    specs: {
+      intro: 'Pisos y recubrimientos de barro cocido: loseta artesanal, extruida, hexagonal y ladrillo. Para interiores, terrazas y patios.',
+      notas: ['El barro natural se sella después de instalado.', 'Variaciones de tono entre piezas: es barro cocido, no cerámica industrial.'],
+    },
+  },
+  {
+    slug: 'mosaico-de-pasta', nombre: 'Mosaico de pasta', grupo: 'Pisos',
+    portada: ['5 colores', '4 colores'],
+    lema: 'Dibujos de cemento pigmentado, pieza por pieza.',
+    subs: [
+      { slug: '1-color', nombre: '1 color' },
+      { slug: '2-colores', nombre: '2 colores' },
+      { slug: '3-colores', nombre: '3 colores' },
+      { slug: '4-colores', nombre: '4 colores' },
+      { slug: '5-colores', nombre: '5 colores' },
+    ],
+    specs: {
+      intro: 'Mosaico hidráulico de 20 × 20 cm. Se fabrica con el número de colores que pida el diseño.',
+      notas: ['Se pule y sella una vez instalado.'],
+    },
+  },
+  {
+    slug: 'piedra', nombre: 'Piedra', grupo: 'Piedra y cantera',
+    portada: ['tomboleado travertino', 'pepita'],
+    lema: 'Fachaletas y mallas de piedra natural.',
+    subs: [
+      { slug: 'fachaletas', nombre: 'Fachaletas' },
+      { slug: 'mallas', nombre: 'Mallas' },
+    ],
+    specs: {
+      intro: 'Piedra natural cortada en fachaleta (piedrín, tronchado, tomboleado, cintilla) o montada en malla (pepita, paladiana, tronchado) para fachadas, muros y jardines.',
+      notas: ['Las fachaletas de largo variable se combinan en obra; el ancho es fijo (5 o 10 cm).'],
+    },
+  },
+  {
+    slug: 'cantera', nombre: 'Cantera', grupo: 'Piedra y cantera',
+    lema: 'Laminados, cintillas y piezas de cantera.',
+    subs: [],
+    specs: {
+      intro: 'Cantera en laminado, cintilla y piezas especiales. La tenemos en tienda; las fotos vienen en camino.',
+      notas: [],
+    },
+  },
+  {
+    slug: 'recinto', nombre: 'Recinto', grupo: 'Piedra y cantera',
+    lema: 'Piedra volcánica para pisos y muros.',
+    subs: [],
+    specs: {
+      intro: 'Recinto en loseta y pepita. Lo tenemos en tienda; las fotos vienen en camino.',
+      notas: [],
+    },
+  },
+  {
+    slug: 'teja', nombre: 'Teja', grupo: 'Techos',
+    lema: 'Teja de barro y sus terminaciones.',
+    subs: [],
+    specs: {
+      intro: 'Teja de barro en varios acabados, con sus terminaciones (cumbrera, cónica, media caña). La tenemos en tienda; las fotos vienen en camino.',
+      notas: [],
+    },
   },
 ];
 
-export const porCat = (cat) => productos.filter((p) => p.cat === cat);
-export const porSub = (cat, sub) => productos.filter((p) => p.cat === cat && p.sub === sub);
-export const buscarUrl = (url) => productos.find((p) => p.url === url);
+// Los GRUPOS son el primer nivel de navegacion (Alek 2026-09-10: de lo
+// general a lo particular, sin menu desplegable). /catalogo/<slug>/
+export const GRUPOS_DEF = [
+  { slug: 'talavera', nombre: 'Talavera', lema: 'Azulejo de barro esmaltado y decorado, con todo lo que lo acompaña.' },
+  { slug: 'bano', nombre: 'Baño', lema: 'Lavabos, muebles y WC decorados, para combinar con el azulejo.' },
+  { slug: 'pisos', nombre: 'Pisos', lema: 'Barro cocido y mosaico de pasta para interiores, terrazas y patios.' },
+  { slug: 'piedra-y-cantera', nombre: 'Piedra y cantera', lema: 'Piedra natural, cantera y recinto para fachadas, muros y jardines.' },
+  { slug: 'techos', nombre: 'Techos', lema: 'Teja de barro y sus terminaciones.' },
+];
+export const GRUPOS = GRUPOS_DEF.map((g) => g.nombre);
+export const porGrupo = (g) => ARBOL.filter((c) => c.grupo === g);
+export const buscarGrupo = (slug) => GRUPOS_DEF.find((g) => g.slug === slug);
+export const grupoDe = (c) => GRUPOS_DEF.find((g) => g.nombre === c.grupo);
 
-/** Precio formateado en pesos, sin centavos. */
-/** Plazo de entrega. No hay "sobre pedido": lo que cambia es el plazo (Alek 2026-08-29).
- *  Sin dato en el catalogo se muestra el rango completo, nunca una promesa falsa. */
-export function plazo(p) {
-  const d = (p.disponibilidad || '').toUpperCase();
-  if (d.startsWith('EN BODEGA')) return { txt: '5 a 7 días hábiles', tag: 'En existencia', hay: true };
-  if (d) return { txt: '15 a 25 días hábiles', tag: 'Bajo pedido', hay: false };
-  return { txt: '5 a 25 días hábiles según disponibilidad', tag: null, hay: null };
-}
+// ------------------------------------------------------------------- PIEZAS
+export const piezas = bruto;
+export const porCat = (cat) => piezas.filter((p) => p.cat === cat);
+export const porSub = (cat, sub) => piezas.filter((p) => p.cat === cat && p.sub === sub);
+export const buscarCat = (slug) => ARBOL.find((c) => c.slug === slug);
 
-/** Como se lee la unidad de venta. Un solo lugar para las 4 pantallas. */
-export const uni = (u) =>
-  ({ M2: 'm²', ML: 'metro lineal', BULTO: 'bulto' }[String(u || '').toUpperCase()] || 'pieza');
-
-export const pesos = (n) =>
-  '$' + Number(n).toLocaleString('es-MX', { maximumFractionDigits: 0 });
-
-/** Terminaciones del mismo ACABADO + COLOR — el bloque "Termina tu instalación". */
-export function terminacionesDe(p) {
-  if (!p.acabado || !p.color) return [];
-  return productos.filter(
-    (t) => t.cat === 'terminaciones' && t.acabado === p.acabado && t.color === p.color
-  );
-}
-
-/** La medida nominal no es la real: el 10X10 de talavera mide 10.8 (Alek 2026-09-02). */
+/** La medida nominal no es la real: el 10X10 de talavera mide 10.8. */
 const MEDIDA_REAL = { '10X10': '10.8 × 10.8 cm' };
-export const medida = (f) =>
-  MEDIDA_REAL[String(f || '').toUpperCase()] ||
-  String(f || '').toUpperCase().replace(/^(\d+(?:\.\d+)?)X(\d+(?:\.\d+)?)$/, '$1 × $2 cm');
+export const medida = (f) => {
+  const s = String(f || '').toUpperCase();
+  if (MEDIDA_REAL[s]) return MEDIDA_REAL[s];
+  if (s === 'UNICO') return 'Pieza única';
+  if (s === 'PZA') return 'Pieza';
+  return s.replace(/^(\d+(?:\.\d+)?)X(\d+(?:\.\d+)?)$/, '$1 × $2 cm')
+          .replace(/^(\d+) CM$/, '$1 cm de ancho');
+};
 
-/** En decorados y relieve el DISEÑO es el producto: dos diseños distintos no son
- *  "el mismo en otro color". Ahi no hay selector de color, van como similares. */
-const SIN_SELECTOR_DE_COLOR = new Set(['decorados', 'relieve']);
-
-/** Otros colores del mismo modelo: el selector de color NAVEGA entre productos. */
-export function hermanos(p) {
-  if (!p.color || SIN_SELECTOR_DE_COLOR.has(p.cat)) return [];
-  const base = (x) => `${x.cat}|${x.sub}|${(x.tipo_pieza || '')}`;
-  return productos
-    .filter((x) => base(x) === base(p) && x.acabado === p.acabado && x.color !== p.color)
-    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+/** Tabla de formatos de una categoria: por subcategoria, los formatos que
+ *  existen en la galeria con sus piezas por m². Sale del JSON, no se escribe
+ *  a mano, asi siempre coincide con lo que se muestra. */
+export function formatosDe(cat) {
+  const c = buscarCat(cat);
+  if (!c) return [];
+  const out = [];
+  for (const s of c.subs) {
+    const items = porSub(cat, s.slug);
+    // Un renglon por FORMATO. Si el maestro trae dos rendimientos para el
+    // mismo formato (15X15 con 49 y con 44), gana el mas frecuente.
+    const votos = new Map();
+    for (const p of items) {
+      for (const f of p.formatos || []) {
+        if (!f.formato) continue;
+        const v = votos.get(f.formato) || { formato: f.formato, medida: f.medida, pz: new Map() };
+        const k = f.pz_m2 || '';
+        v.pz.set(k, (v.pz.get(k) || 0) + 1);
+        if (!v.medida && f.medida) v.medida = f.medida;
+        votos.set(f.formato, v);
+      }
+    }
+    const formatos = [...votos.values()].map((v) => {
+      const pz_m2 = [...v.pz.entries()].sort((a, b) => b[1] - a[1])[0][0];
+      return { formato: v.formato, medida: v.medida, pz_m2: pz_m2 || undefined };
+    });
+    if (formatos.length) out.push({ sub: s, formatos });
+  }
+  return out;
 }
 
-/** Productos similares: misma categoria y subcategoria, otro diseño.
- *  En cintilla la subcategoria ES el formato, asi que lo util no es "otro color
- *  del mismo ancho" (eso ya lo da el selector de color) sino EL MISMO COLOR EN
- *  LOS OTROS ANCHOS. */
-export function similares(p, n = 8) {
-  if (p.cat === 'cintilla')
-    return productos
-      .filter((x) => x.cat === 'cintilla' && x.url !== p.url &&
-                     x.acabado === p.acabado && x.color === p.color)
-      .sort((a, b) => a.desde - b.desde);
-  return productos
-    .filter((x) => x.cat === p.cat && x.sub === p.sub && x.url !== p.url)
-    .sort((a, b) => a.nombre.localeCompare(b.nombre))
-    .slice(0, n);
+/** Portadas de una categoria: primero las piezas preferidas (`portada` en el
+ *  ARBOL, por nombre), luego una por familia de color distinta, para que las
+ *  tarjetas no salgan todas del mismo tono (Alek 2026-09-10: casi todo salia
+ *  amarillo porque "Amarillo" va primero en el abecedario). */
+export function portadas(cat, n = 1) {
+  const c = buscarCat(cat);
+  const items = porCat(cat);
+  const out = [];
+  const fam = (p) => FAM[(p.colores || [])[0]] || 'Multicolor';
+  for (const pref of c?.portada || []) {
+    const p = items.find((x) => x.nombre.toLowerCase().includes(pref) && !out.includes(x));
+    if (p) out.push(p);
+    if (out.length >= n) return out;
+  }
+  const usadas = new Set(out.map(fam));
+  for (const p of items) {
+    if (out.length >= n) break;
+    if (out.includes(p) || usadas.has(fam(p))) continue;
+    out.push(p); usadas.add(fam(p));
+  }
+  for (const p of items) {
+    if (out.length >= n) break;
+    if (!out.includes(p)) out.push(p);
+  }
+  return out;
 }
 
-/** Azulejo liso <-> decorado que comparten color. El liso y el dibujo se
- *  instalan juntos, asi que cada ficha recomienda el complemento del otro lado. */
-export function combinaCon(p, n = 8) {
-  const destino = { azulejo: 'decorados', decorados: 'azulejo' }[p.cat];
-  if (!destino || !p.colores.length) return [];
-  return productos
-    .filter((x) => x.cat === destino && x.colores.some((c) => p.colores.includes(c)))
-    .sort((a, b) => a.nombre.localeCompare(b.nombre))
-    .slice(0, n);
-}
+/** Cuantos colores distintos hay en un conjunto. */
+export const coloresDe = (items) => {
+  const s = new Set();
+  for (const p of items) for (const c of p.colores || []) s.add(c);
+  return [...s];
+};

@@ -1,196 +1,270 @@
 ---
-import { ARBOL } from '../lib/catalogo.js';
-import { TASA_IVA } from '../lib/iva.js';
-const { titulo, descripcion = 'Talavera 100% mexicana, a la puerta de tu casa.' } = Astro.props;
+import { GRUPOS_DEF, porGrupo, porCat, CONTACTO, waHref, telHref } from '../lib/catalogo.js';
+import Flor from '../components/Flor.astro';
+const {
+  titulo,
+  descripcion = 'Talavera, barro, piedra, cantera y teja. Acabados artesanales para tu proyecto, en tienda física en Coyoacán, CDMX.',
+  claseBody = '',
+} = Astro.props;
+const anio = new Date().getFullYear();
+const grupos = GRUPOS_DEF.map((g) => ({ ...g, cats: porGrupo(g.nombre).map((c) => ({ ...c, n: porCat(c.slug).length })) }));
+const ruta = Astro.url.pathname;
 ---
 <!doctype html>
 <html lang="es-MX">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{titulo ? `${titulo} · Bodega de Talavera` : 'Bodega de Talavera'}</title>
+    <title>{titulo ? `${titulo} · ${CONTACTO.nombre}` : `${CONTACTO.nombre} · ${CONTACTO.descriptor}`}</title>
     <meta name="description" content={descripcion} />
-    <meta property="og:title" content={titulo || 'Bodega de Talavera'} />
+    <meta property="og:title" content={titulo || CONTACTO.nombre} />
     <meta property="og:description" content={descripcion} />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/og.png" />
+    <meta property="og:locale" content="es_MX" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#FAF6EF" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
-    <link rel="icon" href="/favicon.png" type="image/png" sizes="96x96" />
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Montserrat:wght@400;500;600&display=swap" />
   </head>
-  <body>
-    <header class="barra">
-      <a href="/" class="marca" aria-label="Bodega de Talavera">
-        <img class="logo-h" src="/logo.svg" alt="Bodega de Talavera" width="531" height="204" />
-        <img class="logo-i" src="/icono.svg" alt="Bodega de Talavera" width="204" height="204" />
+  <body class={claseBody}>
+    <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+    <header class="barra" id="barra">
+      <a href="/" class="marca" aria-label={CONTACTO.nombre}>
+        <img class="logo-h" src="/logo.svg" alt={CONTACTO.nombre} width="666" height="271" />
       </a>
-      <nav>
-        {ARBOL.map((c) => <a href={`/${c.slug}/`}>{c.nombre}</a>)}
-      </nav>
-      <a class="wa" href="/carrito/">Carrito <span id="cuenta" hidden>0</span></a>
+      <a class:list={['contacto-btn', ruta === '/contacto/' && 'act']} href="/contacto/">Contacto</a>
     </header>
 
-    <script is:inline define:vars={{ TASA_IVA }}>
-      // Los precios publicados YA INCLUYEN IVA: se desglosa hacia atras, nunca se
-      // suma encima. Vive aqui para que carrito, checkout y seguimiento usen la
-      // misma cuenta. La copia del servidor esta en src/lib/iva.js y la prueba
-      // test_iva.mjs verifica que subtotal + iva == el precio publicado.
-      window.desglosarIva = (conIva) => {
-        const t = Math.round(Number(conIva || 0) * 100) / 100;
-        const subtotal = Math.round((t / (1 + TASA_IVA)) * 100) / 100;
-        return { subtotal, iva: Math.round((t - subtotal) * 100) / 100 };
-      };
-
-      // ponytail: carrito en localStorage. No hay backend todavia (la forma de
-      // cobro sigue sin decidirse), asi que el pedido se cierra por WhatsApp.
-      window.carrito = {
-        leer() { try { return JSON.parse(localStorage.getItem('bt_carrito') || '[]'); } catch { return []; } },
-        guardar(c) { localStorage.setItem('bt_carrito', JSON.stringify(c)); this.pintar(); },
-        agregar(item) {
-          const c = this.leer();
-          const y = c.find((x) => x.codigo === item.codigo);
-          if (y) y.cant += item.cant; else c.push(item);
-          this.guardar(c);
-        },
-        quitar(codigo) { this.guardar(this.leer().filter((x) => x.codigo !== codigo)); },
-        cantidad(codigo, n) {
-          const c = this.leer();
-          const y = c.find((x) => x.codigo === codigo);
-          if (y) y.cant = Math.max(1, n);
-          this.guardar(c);
-        },
-        vaciar() { this.guardar([]); },
-        piezas() { return this.leer().reduce((s, x) => s + x.cant, 0); },
-        total() { return this.leer().reduce((s, x) => s + x.cant * x.precio, 0); },
-        pintar() {
-          const b = document.getElementById('cuenta');
-          if (!b) return;
-          const n = this.piezas();
-          b.textContent = n;
-          b.hidden = n === 0;
-        },
-      };
-      document.addEventListener('DOMContentLoaded', () => window.carrito.pintar());
-    </script>
-
-    <main><slot /></main>
-
-
+    <main id="contenido"><slot /></main>
 
     <footer>
       <div class="pie">
-        <div>
-          <img class="pie-logo" src="/logo.svg" alt="Bodega de Talavera" width="531" height="204" />
-          <p>Talavera 100% mexicana, a la puerta de tu casa.</p>
+        <div class="pie-marca">
+          <img class="pie-logo" src="/logo-v.svg" alt={CONTACTO.nombre} width="414" height="412" />
+          <p class="pie-desc">{CONTACTO.descriptor}</p>
+          <p class="pie-dir">{CONTACTO.direccion}</p>
         </div>
         <div>
-          <p class="pie-t">Categorías</p>
-          {ARBOL.map((c) => <a href={`/${c.slug}/`}>{c.nombre}</a>)}
+          <p class="pie-t">Catálogo</p>
+          {grupos.map((g) => <a class="pie-g" href={`/catalogo/${g.slug}/`}>{g.nombre}</a>)}
+          <a href="/catalogo/">Ver todo →</a>
         </div>
         <div>
           <p class="pie-t">Contacto</p>
-          <a href="https://wa.me/525554147383" target="_blank" rel="noopener">WhatsApp +52 55 5414 7383</a>
-          <a href="mailto:info@bodegadetalavera.com">info@bodegadetalavera.com</a>
+          <a href={waHref()} target="_blank" rel="noopener">WhatsApp {CONTACTO.whatsappBonito}</a>
+          {CONTACTO.telefonos.map((t) => <a href={telHref(t)}>Tel. {t}</a>)}
+          <a href={`mailto:${CONTACTO.correo}`}>{CONTACTO.correo}</a>
+          <a href={CONTACTO.instagram} target="_blank" rel="noopener">Instagram {CONTACTO.usuario}</a>
+          <a href={CONTACTO.facebook} target="_blank" rel="noopener">Facebook {CONTACTO.usuario}</a>
         </div>
         <div>
-          <p class="pie-t">Información</p>
-          <a href="/terminos/">Términos y condiciones</a>
-          <a href="/devoluciones/">Devoluciones y cambios</a>
-          <a href="/privacidad/">Aviso de privacidad</a>
+          <p class="pie-t">Tienda física</p>
+          {CONTACTO.horario.map((h) => <p class="pie-h"><b>{h.dias}</b><br />{h.horas}</p>)}
+          <a href={CONTACTO.mapsGoogle} target="_blank" rel="noopener">Cómo llegar →</a>
         </div>
       </div>
-      <p class="legal">Producto artesanal: variaciones de color y medida de hasta 5%. Considera una merma de hasta 5% por traslados y cortes.</p>
+      <div class="legal">
+        <span>© {anio} {CONTACTO.nombre}. Grupo RAAC.</span>
+        <span>Producto artesanal: variaciones de color y medida de hasta 5% entre piezas.</span>
+        <a href="/privacidad/">Aviso de privacidad</a>
+      </div>
     </footer>
 
+    <a class="wa-flota" href={waHref('Hola, vi su catálogo en la página y quiero cotizar.')} target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5C10 9 9.4 7.6 9.1 7c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3 4.8 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.2-.3-.3-.6-.4z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.7 1.5 5.3L2 22l4.8-1.5c1.5.9 3.3 1.4 5.2 1.4 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.7 0-3.4-.5-4.8-1.4l-.3-.2-3 .9.9-2.9-.2-.3C3.7 15 3.2 13.5 3.2 12 3.2 7.1 7.1 3.2 12 3.2S20.8 7.1 20.8 12 16.9 20.2 12 20.2z"/></svg>
+    </a>
+
+    <!-- Visor: clic en una pieza la amplia. Vive aqui para que cualquier pagina con .pieza lo use. -->
+    <div class="visor" id="visor" hidden role="dialog" aria-modal="true" aria-label="Imagen ampliada">
+      <button class="visor-cerrar" type="button" aria-label="Cerrar">×</button>
+      <button class="visor-prev" type="button" aria-label="Anterior">‹</button>
+      <div class="visor-marco"><img src="" alt="" /></div>
+      <button class="visor-next" type="button" aria-label="Siguiente">›</button>
+      <div class="visor-txt">
+        <p class="visor-pie"></p>
+        <p class="visor-sub"></p>
+      </div>
+    </div>
+
+    <script is:inline>
+    (() => {
+      // La barra se encoge al bajar.
+      const barra = document.getElementById('barra');
+      const alScroll = () => barra?.classList.toggle('chica', window.scrollY > 40);
+      window.addEventListener('scroll', alScroll, { passive: true });
+      alScroll();
+
+      // Visor de imagenes, solo si la pagina tiene piezas.
+      if (document.querySelector('.pieza')) import('/filtro.js').then((m) => m.montarVisor());
+    })();
+    </script>
+
     <style is:global>
+      /* ---------- Identidad Rusticos Artesanales (guia oficial) ---------- */
       :root {
-        --indigo: #383188;
-        --coral: #f77759;
-        --carbon: #2e3641;
-        --marfil: #fdfaf3;
-        --linea: #e7e2d8;
-        --tenue: #6f6a63;
-        --radio: 4px;
+        --cacao: #3C2A24;      /* logotipo, titulares, texto principal */
+        --terracota: #B45A2A;  /* simbolo, ornamentos, acentos */
+        --arena: #D8B89A;      /* fondos secundarios */
+        --marfil: #FAF6EF;     /* fondo principal */
+        --arena-claro: #F1E6D6;
+        --linea: #E4D6C3;
+        --tenue: #7A675D;
+        --blanco: #FFFFFF;
+        --radio: 3px;
+        --serif: "Cormorant Garamond", "Times New Roman", Georgia, serif;
+        --sans: "Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        --ancho: 1200px;
       }
       * { box-sizing: border-box; }
-      /* display en las clases gana sobre el atributo hidden si no se fuerza */
       [hidden] { display: none !important; }
-      html { scroll-behavior: smooth; }
+      html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
       body {
-        margin: 0;
-        background: var(--marfil);
-        color: var(--carbon);
-        font-family: "Nunito Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-        font-size: 16px;
-        line-height: 1.55;
+        margin: 0; background: var(--marfil); color: var(--cacao);
+        font-family: var(--sans); font-weight: 400; font-size: 15px; line-height: 1.65;
         -webkit-font-smoothing: antialiased;
       }
       a { color: inherit; text-decoration: none; }
       img { max-width: 100%; display: block; }
-      h1, h2, h3 { line-height: 1.15; margin: 0; letter-spacing: -0.02em; font-weight: 700; }
+      button { font-family: inherit; }
+      h1, h2, h3, .serif {
+        font-family: var(--serif); font-weight: 600; line-height: 1.08; margin: 0; letter-spacing: -0.005em;
+        color: var(--cacao);
+      }
+      h1 { font-size: clamp(38px, 5.4vw, 68px); }
+      h2 { font-size: clamp(30px, 3.8vw, 46px); }
+      h3 { font-size: clamp(22px, 2.4vw, 28px); }
+      p { margin: 0; }
+      .contenedor { max-width: var(--ancho); margin: 0 auto; padding: 0 28px; }
+      @media (max-width: 640px) { .contenedor { padding: 0 18px; } }
 
+      .saltar { position: absolute; left: -999px; top: 8px; background: var(--cacao); color: var(--marfil); padding: 8px 14px; z-index: 100; }
+      .saltar:focus { left: 8px; }
+
+      /* etiqueta pequena en mayusculas: el "descriptor" de la marca y las cejas de seccion */
+      .ceja {
+        display: inline-flex; align-items: center; gap: 10px;
+        font-size: 11px; font-weight: 500; letter-spacing: .22em; text-transform: uppercase; color: var(--terracota);
+      }
+      .ceja::before, .ceja.der::after { content: ''; width: 28px; height: 1px; background: var(--terracota); }
+      .ceja.centro { justify-content: center; }
+
+      .boton {
+        display: inline-flex; align-items: center; gap: 10px;
+        padding: 14px 26px; border-radius: var(--radio);
+        background: var(--terracota); color: var(--marfil); border: 1px solid var(--terracota);
+        font-size: 13px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase;
+        transition: background .2s ease, color .2s ease, border-color .2s ease;
+        cursor: pointer;
+      }
+      .boton:hover { background: var(--cacao); border-color: var(--cacao); }
+      .boton.hueco { background: transparent; color: var(--cacao); border-color: var(--cacao); }
+      .boton.hueco:hover { background: var(--cacao); color: var(--marfil); }
+      .boton.claro { background: transparent; color: var(--marfil); border-color: rgba(250,246,239,.6); }
+      .boton.claro:hover { background: var(--marfil); color: var(--cacao); border-color: var(--marfil); }
+
+      /* .rev: sin animacion por ahora (Alek 2026-09-10: hasta tener contenido real) */
+      .rev { opacity: 1; }
+
+      /* ---------------------------------------------------------- barra */
+      /* El logo ocupa toda la barra; solo lo acompaña el boton de contacto
+         (Alek 2026-09-10). El catalogo se entra desde la home. */
       .barra {
-        position: sticky; top: 0; z-index: 20;
-        display: flex; align-items: center; gap: 28px;
-        padding: 12px 28px;
-        background: rgba(253, 250, 243, 0.92);
-        backdrop-filter: blur(10px);
+        position: sticky; top: 0; z-index: 30;
+        display: flex; align-items: center; justify-content: space-between; gap: 20px;
+        padding: 10px 32px;
+        background: rgba(250, 246, 239, .96);
+        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         border-bottom: 1px solid var(--linea);
+        transition: padding .25s ease;
       }
-      /* Regla de la guia: por debajo de 32 px de alto va solo el icono. */
-      .marca { display: block; flex: 0 0 auto; }
-      .marca img { height: 68px; width: auto; }
-      .logo-i { display: none; }
+      .barra.chica { padding: 6px 32px; }
+      .marca { display: block; flex: 0 1 auto; min-width: 0; }
+      .marca img { height: 124px; width: auto; max-width: 100%; transition: height .25s ease; }
+      .barra.chica .marca img { height: 78px; }
+      .contacto-btn {
+        flex: 0 0 auto; display: inline-flex; align-items: center; padding: 13px 24px;
+        border-radius: var(--radio); background: var(--terracota); color: var(--marfil);
+        font-size: 13px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+        transition: background .2s ease;
+      }
+      .contacto-btn:hover, .contacto-btn.act { background: var(--cacao); }
+      @media (max-width: 900px) {
+        .barra { padding: 8px 18px; gap: 12px; }
+        .barra.chica { padding: 6px 18px; }
+        .marca img { height: 84px; }
+        .barra.chica .marca img { height: 62px; }
+        .contacto-btn { padding: 11px 16px; font-size: 12px; }
+      }
       @media (max-width: 420px) {
-        .logo-h { display: none; }
-        .logo-i { display: block; height: 38px; }
-      }
-      .barra nav { display: flex; gap: 22px; margin-left: auto; font-size: 14px; font-weight: 500; }
-      .barra nav a:hover { color: var(--indigo); }
-      .wa {
-        font-size: 13px; font-weight: 600; padding: 7px 14px;
-        border: 1px solid var(--linea); border-radius: 999px;
-      }
-      .wa:hover { border-color: var(--indigo); color: var(--indigo); }
-      .wa #cuenta {
-        display: inline-block; margin-left: 6px; min-width: 18px; padding: 0 5px;
-        background: var(--coral); color: #fff; border-radius: 999px;
-        font-size: 11px; line-height: 18px; text-align: center;
-      }
-      @media (max-width: 820px) {
-        .barra { flex-wrap: wrap; gap: 12px; padding: 12px 16px; }
-        .barra nav { order: 3; width: 100%; margin: 0; overflow-x: auto; padding-bottom: 2px; }
-        .wa { margin-left: auto; }
+        .marca img { height: 68px; }
+        .barra.chica .marca img { height: 54px; }
       }
 
       main { min-height: 60vh; }
-      .contenedor { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
-      @media (max-width: 640px) { .contenedor { padding: 0 16px; } }
 
-      .miga { font-size: 13px; color: var(--tenue); padding: 26px 0 0; }
-      .miga a:hover { color: var(--indigo); }
-
-      footer { border-top: 1px solid var(--linea); margin-top: 90px; padding: 48px 0 32px; }
+      /* ------------------------------------------------------------ pie */
+      footer { margin-top: 100px; background: var(--cacao); color: var(--arena); }
       .pie {
-        max-width: 1180px; margin: 0 auto; padding: 0 28px;
-        display: grid; grid-template-columns: 2fr 1fr 1.4fr 1.2fr; gap: 34px;
-        font-size: 14px;
+        max-width: var(--ancho); margin: 0 auto; padding: 64px 28px 40px;
+        display: grid; grid-template-columns: 1.6fr 1fr 1.3fr 1fr; gap: 40px; font-size: 14px;
       }
-      .pie a { display: block; color: var(--tenue); padding: 2px 0; }
-      .pie a:hover { color: var(--indigo); }
-      .pie p { margin: 0 0 6px; color: var(--tenue); }
-      .pie-logo { height: 52px; width: auto; margin-bottom: 12px; }
-      .pie-t { font-weight: 600; color: var(--carbon) !important; margin-bottom: 10px !important; }
+      .pie a { display: block; color: var(--arena); padding: 3px 0; }
+      .pie-g { font-family: var(--serif); font-size: 19px; font-weight: 600; color: var(--marfil) !important; }
+      .pie a:hover { color: var(--marfil); }
+      .pie-t { font-family: var(--serif); font-size: 22px; font-weight: 600; color: var(--marfil); margin: 0 0 12px; }
+      .pie-logo { height: 120px; width: auto; margin-bottom: 14px; filter: brightness(0) invert(1) sepia(.35) saturate(.6) brightness(.95); opacity: .95; }
+      .pie-desc { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--marfil); margin-bottom: 14px; }
+      .pie-dir { max-width: 320px; color: var(--arena); }
+      .pie-h { margin-bottom: 10px; } .pie-h b { color: var(--marfil); font-weight: 500; }
       .legal {
-        max-width: 1180px; margin: 34px auto 0; padding: 20px 28px 0;
-        border-top: 1px solid var(--linea);
-        font-size: 12px; color: var(--tenue);
+        max-width: var(--ancho); margin: 0 auto; padding: 18px 28px 30px;
+        border-top: 1px solid rgba(216, 184, 154, .25);
+        display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 12px; color: rgba(216, 184, 154, .8);
       }
-      @media (max-width: 820px) { .pie { grid-template-columns: 1fr 1fr; } }
+      .legal a { color: var(--marfil); }
+      @media (max-width: 900px) { .pie { grid-template-columns: 1fr 1fr; } }
+      @media (max-width: 520px) { .pie { grid-template-columns: 1fr; gap: 30px; } }
+
+      .wa-flota {
+        position: fixed; right: 18px; bottom: 18px; z-index: 20;
+        width: 54px; height: 54px; border-radius: 50%;
+        display: none; align-items: center; justify-content: center;
+        background: #25D366; color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      }
+      @media (max-width: 900px) { .wa-flota { display: flex; } }
+
+      /* ----------------------------------------------------------- visor */
+      .visor {
+        position: fixed; inset: 0; z-index: 50; display: grid;
+        grid-template-rows: 1fr auto; align-items: center; justify-items: center;
+        background: rgba(60, 42, 36, .94); opacity: 0; transition: opacity .25s ease;
+      }
+      .visor.on { opacity: 1; }
+      .visor-marco { grid-row: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 64px 72px 12px; }
+      .visor img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: var(--radio); background: var(--marfil); }
+      .visor-txt { grid-row: 2; text-align: center; padding: 0 20px 34px; color: var(--marfil); }
+      .visor-pie { font-family: var(--serif); font-size: 26px; font-weight: 600; }
+      .visor-sub { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--arena); margin-top: 4px; }
+      .visor button {
+        position: absolute; border: 0; background: rgba(250,246,239,.1); color: var(--marfil);
+        width: 48px; height: 48px; border-radius: 50%; font-size: 30px; line-height: 1; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .visor button:hover { background: rgba(250,246,239,.22); }
+      .visor-cerrar { top: 16px; right: 16px; }
+      .visor-prev { left: 14px; top: 50%; transform: translateY(-50%); }
+      .visor-next { right: 14px; top: 50%; transform: translateY(-50%); }
+      @media (max-width: 640px) {
+        .visor-marco { padding: 60px 12px 8px; }
+        .visor-prev, .visor-next { top: auto; bottom: 90px; transform: none; }
+        .visor-pie { font-size: 22px; }
+      }
     </style>
   </body>
 </html>

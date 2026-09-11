@@ -1,0 +1,92 @@
+---
+import Base from '../../layouts/Base.astro';
+import Flor from '../../components/Flor.astro';
+import { GRUPOS_DEF, porGrupo, porCat, CONTACTO, waHref, portadas } from '../../lib/catalogo.js';
+
+// Nivel 2 del catalogo: las CATEGORIAS de un grupo. /catalogo/talavera/
+export function getStaticPaths() {
+  return GRUPOS_DEF.map((g) => ({ params: { grupo: g.slug }, props: { g } }));
+}
+const { g } = Astro.props;
+const cats = porGrupo(g.nombre).map((c) => {
+  const items = porCat(c.slug);
+  // hasta 4 fotos completas por categoria, de colores distintos
+  const fotos = portadas(c.slug, 4).map((p) => p.foto);
+  return { ...c, n: items.length, fotos };
+});
+const total = cats.reduce((s, c) => s + c.n, 0);
+const otros = GRUPOS_DEF.filter((x) => x.slug !== g.slug);
+---
+<Base titulo={g.nombre} descripcion={`${g.nombre}: ${g.lema}`}>
+  <div class="contenedor">
+    <p class="miga"><a href="/">Inicio</a> <span>·</span> <a href="/catalogo/">Catálogo</a> <span>·</span> {g.nombre}</p>
+    <header class="cab">
+      <p class="ceja">Catálogo</p>
+      <h1>{g.nombre}</h1>
+      <p class="intro">{g.lema} {total ? `${total} piezas con foto en ${cats.length} ${cats.length === 1 ? 'categoría' : 'categorías'}.` : 'Lo tenemos en tienda; las fotos vienen en camino.'}</p>
+    </header>
+
+    <div class="cats">
+      {cats.map((c) => (
+        <a class:list={['cat', !c.n && 'pronto']} href={`/${c.slug}/`}>
+          <div class="marcos">
+            {c.fotos.length
+              ? c.fotos.map((f) => <div class="marco"><img src={f} alt="" loading="lazy" width="400" height="400" /></div>)
+              : <div class="marco vacio"><img src="/icono.svg" alt="" width="120" height="80" /><span>Fotos en camino</span></div>}
+          </div>
+          <div class="cat-txt">
+            <h2>{c.nombre}</h2>
+            <p>{c.lema}</p>
+            <span>{c.n ? `${c.n} ${c.n === 1 ? 'pieza' : 'piezas'}` : 'Lo tenemos en tienda'} →</span>
+          </div>
+        </a>
+      ))}
+    </div>
+
+    {!total && (
+      <div class="en-tienda">
+        <a class="boton" href={waHref(`Hola, me interesa ${g.nombre.toLowerCase()}. ¿Me mandan fotos y opciones?`)} target="_blank" rel="noopener">Pedir fotos por WhatsApp</a>
+        <a class="boton hueco" href="/contacto/">Cómo llegar · {CONTACTO.direccionCorta}</a>
+      </div>
+    )}
+
+    <section class="otros">
+      <p class="ceja">Otros materiales</p>
+      <div class="otros-lista">
+        {otros.map((o) => <a href={`/catalogo/${o.slug}/`}><Flor tam={10} /> {o.nombre}</a>)}
+      </div>
+    </section>
+  </div>
+
+  <style>
+    .miga { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); padding: 26px 0 0; }
+    .miga span { margin: 0 6px; color: var(--arena); }
+    .miga a:hover { color: var(--terracota); }
+    .cab { padding: 26px 0 30px; max-width: 760px; }
+    .cab h1 { margin-top: 14px; }
+    .intro { margin-top: 14px; color: var(--tenue); }
+
+    .cats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 34px 28px; }
+    @media (max-width: 640px) { .cats { grid-template-columns: 1fr; } }
+    .cat { display: block; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--blanco); overflow: hidden; transition: border-color .15s ease; }
+    .cat:hover { border-color: var(--terracota); }
+    /* cuatro fotos completas, cada una en su cuadro: sin recortes */
+    .marcos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--linea); border-bottom: 1px solid var(--linea); }
+    .marco { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; padding: 8px; background: var(--blanco); }
+    .marco img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
+    .marco.vacio { grid-column: 1 / -1; aspect-ratio: 4 / 1; flex-direction: column; gap: 8px; background: var(--arena-claro); }
+    .marco.vacio img { width: 70px; opacity: .5; }
+    .marco.vacio span { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--tenue); }
+    .cat-txt { padding: 18px 22px 20px; }
+    .cat-txt h2 { font-size: 28px; }
+    .cat-txt p { margin: 6px 0 0; font-size: 13px; color: var(--tenue); }
+    .cat-txt span { display: block; margin-top: 12px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--terracota); font-weight: 500; }
+    .cat.pronto .cat-txt span { color: var(--tenue); }
+
+    .en-tienda { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+    .otros { margin-top: 70px; padding-top: 24px; border-top: 1px solid var(--linea); }
+    .otros-lista { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .otros-lista a { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: 1px solid var(--linea); border-radius: 999px; background: var(--blanco); font-family: var(--serif); font-size: 19px; font-weight: 600; }
+    .otros-lista a:hover { border-color: var(--terracota); }
+  </style>
+</Base>
