@@ -335,7 +335,30 @@ const NOS = escoge('talavera-decorada', ['collage azul']);
       document.addEventListener('visibilitychange', programar);
       document.getElementById('libro-sig').addEventListener('click', () => { pasar(1); programar(); });
       document.getElementById('libro-atras').addEventListener('click', () => { pasar(-1); programar(); });
-      libro.addEventListener('click', (e) => { pasar(e.clientX < libro.getBoundingClientRect().left + libro.clientWidth / 2 ? -1 : 1); programar(); });
+      // Clic: mitad izquierda atras, mitad derecha adelante (escritorio).
+      // Si el clic viene justo despues de un deslizamiento, se ignora.
+      let deslizo = false;
+      libro.addEventListener('click', (e) => {
+        if (deslizo) { deslizo = false; return; }
+        pasar(e.clientX < libro.getBoundingClientRect().left + libro.clientWidth / 2 ? -1 : 1);
+        programar();
+      });
+      // Gesto en celular/tablet (Alek 2026-09-11): deslizar a la izquierda pasa
+      // la pagina, a la derecha regresa. Solo cuenta si el movimiento es mas
+      // horizontal que vertical, para no estorbar el scroll de la pagina.
+      let x0 = null, y0 = null;
+      libro.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+      libro.addEventListener('touchend', (e) => {
+        if (x0 === null) return;
+        const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+        x0 = y0 = null;
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          deslizo = true;
+          pasar(dx < 0 ? 1 : -1);
+          programar();
+          setTimeout(() => { deslizo = false; }, 400);
+        }
+      }, { passive: true });
       pintar();
     }
   </script>
@@ -476,6 +499,7 @@ const NOS = escoge('talavera-decorada', ['collage azul']);
     .libro-envoltura { --alto-libro: min(62vh, 560px); margin: 26px auto 0; width: calc(var(--alto-libro) * 1.5); max-width: 100%; }
     .libro {
       position: relative; aspect-ratio: 3 / 2; perspective: 2200px; cursor: pointer; user-select: none;
+      touch-action: pan-y; /* el deslizamiento horizontal es del libro; el vertical sigue siendo scroll */
     }
     .pag {
       position: absolute; top: 0; bottom: 0; width: 50%; overflow: hidden;
