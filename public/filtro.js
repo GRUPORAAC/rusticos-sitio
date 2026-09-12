@@ -84,16 +84,25 @@ export function montarVisor() {
   const next = visor.querySelector('.visor-next');
   let lista = [], i = 0, ultimo = null;
 
-  const visibles = () => [...document.querySelectorAll('.pieza')].filter((p) => !p.hidden);
+  // Una entrada por FOTO, no por pieza: asi las flechas, el teclado y el
+  // swipe recorren tambien las tomas extra de un mismo producto.
+  const visibles = () => [...document.querySelectorAll('.pieza')]
+    .filter((p) => !p.hidden)
+    .flatMap((el) => (el.dataset.fotos || el.querySelector('img').src).split('|')
+      .filter(Boolean)
+      .map((src, n, todas) => ({
+        el, src,
+        nombre: el.dataset.nombre || '',
+        sub: todas.length > 1 ? `${el.dataset.sub || ''} · ${n + 1}/${todas.length}`.replace(/^ · /, '') : (el.dataset.sub || ''),
+      })));
 
   function mostrar(k) {
     i = (k + lista.length) % lista.length;
-    const el = lista[i];
-    const fotos = (el.dataset.fotos || el.querySelector('img').src).split('|');
-    img.src = fotos[0];
-    img.alt = el.dataset.nombre || '';
-    pie.textContent = el.dataset.nombre || '';
-    sub.textContent = el.dataset.sub || '';
+    const v = lista[i];
+    img.src = v.src;
+    img.alt = v.nombre;
+    pie.textContent = v.nombre;
+    sub.textContent = v.sub;
     prev.hidden = next.hidden = lista.length < 2;
   }
   function abrir(el) {
@@ -101,7 +110,7 @@ export function montarVisor() {
     ultimo = document.activeElement;
     visor.hidden = false;
     document.body.style.overflow = 'hidden';
-    mostrar(lista.indexOf(el));
+    mostrar(lista.findIndex((v) => v.el === el));
     requestAnimationFrame(() => visor.classList.add('on'));
     cerrar.focus();
   }

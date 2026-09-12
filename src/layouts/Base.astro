@@ -253,7 +253,7 @@ const ruta = Astro.url.pathname;
         background: rgba(60, 42, 36, .94); opacity: 0; transition: opacity .25s ease;
       }
       .visor.on { opacity: 1; }
-      .visor-marco { grid-row: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 64px 72px 12px; }
+      .visor-marco { grid-row: 1; width: 100%; height: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 64px 72px 12px; }
       .visor img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: var(--radio); background: var(--marfil); }
       .visor-txt { grid-row: 2; text-align: center; padding: 0 20px 34px; color: var(--marfil); }
       .visor-pie { font-family: var(--serif); font-size: 26px; font-weight: 600; }
