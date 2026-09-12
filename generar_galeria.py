@@ -146,6 +146,12 @@ def clasificar(p):
             return ("terminaciones", slug(p.get("pieza_forma")) or "corniza")
         return ("terminaciones", slug(tp) or "otros")
 
+    # Complementos de instalacion (Alek 2026-09-12)
+    if cat in ("Pegamento/Adhesivo", "Sellador", "Junteador", "Mezcladoras"):
+        sub = {"Pegamento/Adhesivo": "pegazulejo", "Sellador": "sellador",
+               "Junteador": "junteador", "Mezcladoras": "herramienta"}[cat]
+        return ("complementos", sub)
+
     if cat == "Barro":
         return ("barro", "loseta")
     if cat == "Loseta/Baldosa":

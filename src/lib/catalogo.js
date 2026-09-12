@@ -66,7 +66,7 @@ export const ARBOL = [
   },
   {
     slug: 'talavera-decorada', nombre: 'Talavera decorada', grupo: 'Talavera',
-    portada: ['cupula azul', 'girasol azul'],
+    portada: ['lluvia rojo'],
     lema: 'Un diseño por pieza, en la carta de colores de la talavera.',
     subs: [
       { slug: 'sencillo', nombre: 'Sencillo' },
@@ -98,6 +98,7 @@ export const ARBOL = [
   },
   {
     slug: 'boutique', nombre: 'Boutique', grupo: 'Talavera',
+    porSubs: true,   // se entra por forma: escama, españolito, hexagonito
     lema: 'Formas que rompen la cuadrícula.',
     subs: [
       { slug: 'escama', nombre: 'Escama' },
@@ -162,7 +163,7 @@ export const ARBOL = [
   },
   {
     slug: 'lavabos', nombre: 'Lavabos', grupo: 'Baño',
-    portada: ['canoa girasol', 'dona'],
+    portada: ['dona veracruz'],
     lema: 'Talavera que se usa todos los días.',
     subs: [{ slug: 'lavabo', nombre: 'Lavabos' }],
     specs: {
@@ -172,7 +173,7 @@ export const ARBOL = [
   },
   {
     slug: 'muebles-de-bano', nombre: 'Muebles de baño', grupo: 'Baño',
-    portada: ['romano girasol', 'romano'],
+    portada: ['romano talavereado azul'],
     lema: 'Un mueble, muchos lavabos.',
     subs: [{ slug: 'mueble', nombre: 'Muebles' }],
     specs: {
@@ -192,7 +193,7 @@ export const ARBOL = [
   },
   {
     slug: 'barro', nombre: 'Barro', grupo: 'Pisos',
-    portada: ['san felipe'],
+    portada: ['artesanal'],
     lema: 'Loseta y ladrillo de barro natural.',
     subs: [{ slug: 'loseta', nombre: 'Losetas' }],
     specs: {
@@ -252,11 +253,27 @@ export const ARBOL = [
     slug: 'teja', nombre: 'Teja', grupo: 'Techos',
     lema: 'Teja de barro y sus terminaciones.',
     // Alek 2026-09-12: primero las de pano instalado, no la pieza suelta.
-    portada: ['casa grande terracota', 'casa grande flameado santa', 'corcega terracota natural', 'renacimiento terracota natural'],
+    portada: ['casa grande terracota', 'casa grande flameado santa', 'estriada', 'teja corcega terracota natural'],
     subs: [],
     specs: {
       intro: 'Teja de barro en varios acabados, con sus terminaciones (cumbrera, cónica, media caña). Formatos y acabados varían; lo confirmamos en tienda.',
       notas: [],
+    },
+  },
+  {
+    slug: 'complementos', nombre: 'Complementos', grupo: 'Complementos',
+    porSubs: true,
+    lema: 'Lo que hace falta para instalar y cuidar el acabado.',
+    portada: ['crest', 'niasa'],
+    subs: [
+      { slug: 'pegazulejo', nombre: 'Pegazulejo y adhesivos' },
+      { slug: 'sellador', nombre: 'Selladores' },
+      { slug: 'junteador', nombre: 'Junteadores' },
+      { slug: 'herramienta', nombre: 'Herramienta' },
+    ],
+    specs: {
+      intro: 'Pegazulejo, adhesivos, selladores y junteadores para instalar y proteger el acabado. Manejamos Crest, Niasa y Mapei; lo que no esté en foto lo tenemos en tienda.',
+      notas: ['El sellador se elige según el material y el uso: pregúntanos antes de comprar.'],
     },
   },
 ];
@@ -269,6 +286,7 @@ export const GRUPOS_DEF = [
   { slug: 'pisos', nombre: 'Pisos', lema: 'Barro cocido y mosaico de pasta para interiores, terrazas y patios.' },
   { slug: 'piedra-y-cantera', nombre: 'Piedra y cantera', lema: 'Piedra natural, cantera y recinto para fachadas, muros y jardines.' },
   { slug: 'techos', nombre: 'Techos', lema: 'Teja de barro y sus terminaciones.' },
+  { slug: 'complementos', nombre: 'Complementos', lema: 'Pegazulejo, selladores y junteadores para instalar y cuidar el acabado.' },
 ];
 export const GRUPOS = GRUPOS_DEF.map((g) => g.nombre);
 export const porGrupo = (g) => ARBOL.filter((c) => c.grupo === g);
