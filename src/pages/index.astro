@@ -132,7 +132,10 @@ const NOS = escoge('talavera-decorada', ['collage azul']);
           </div>
         </section>
       ))}
-      <script is:inline>import('/secuencia.js').then((m) => m.montarSecuencias());</script>
+      <script>
+        import { montarSecuencias } from '../scripts/secuencia.js';
+        if (document.querySelector('[data-secuencia]')) montarSecuencias();
+      </script>
     </>
   )}
 

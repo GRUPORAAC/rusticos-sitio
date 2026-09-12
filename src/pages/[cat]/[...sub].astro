@@ -122,8 +122,14 @@ const primerSub = subs[0];
         <p class="vacio vacio-filtro" hidden>No hay piezas con ese filtro. <button type="button" class="liga" onclick="document.getElementById('quitar-filtro')?.click()">Ver todas</button></p>
       </div>
 
-      <script define:vars={{ mapa, fams: FAM }}>
-        import('/filtro.js').then((m) => m.montarFiltro(mapa, fams));
+      <script type="application/json" id="datos-filtro" is:inline set:html={JSON.stringify({ mapa, fams: FAM })}></script>
+      <script>
+        import { montarFiltro } from '../../scripts/filtro.js';
+        const datos = document.getElementById('datos-filtro');
+        if (datos) {
+          const d = JSON.parse(datos.textContent);
+          montarFiltro(d.mapa, d.fams);
+        }
       </script>
     </>
   ) : (

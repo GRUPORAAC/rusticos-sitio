@@ -99,8 +99,9 @@ const ruta = Astro.url.pathname;
       </div>
     </div>
 
-    <script is:inline>
-    (() => {
+    <!-- Sin is:inline: Astro lo empaqueta con hash en el nombre, asi el
+         navegador nunca sirve una version vieja del script (Alek 2026-09-12). -->
+    <script>
       // La barra se encoge al bajar.
       const barra = document.getElementById('barra');
       const alScroll = () => barra?.classList.toggle('chica', window.scrollY > 40);
@@ -108,8 +109,9 @@ const ruta = Astro.url.pathname;
       alScroll();
 
       // Visor de imagenes, solo si la pagina tiene piezas.
-      if (document.querySelector('.pieza')) import('/filtro.js').then((m) => m.montarVisor());
-    })();
+      if (document.querySelector('.pieza')) {
+        import('../scripts/filtro.js').then((m) => m.montarVisor());
+      }
     </script>
 
     <style is:global>
