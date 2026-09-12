@@ -3,3 +3,5 @@
 *.webp binary
 *.png binary
 *.jpg binary
+*.cmd text eol=crlf
+*.bat text eol=crlf
