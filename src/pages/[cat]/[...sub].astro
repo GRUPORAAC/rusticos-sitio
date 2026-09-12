@@ -6,17 +6,28 @@ import { ARBOL, porCat, porSub, formatosDe, medida, coloresDe, COLORES, CONTACTO
 import FAM from '../../data/familias.json';
 
 export function getStaticPaths() {
-  return ARBOL.map((c) => ({ params: { cat: c.slug }, props: { c } }));
+  // Una ruta por categoria y otra por subcategoria con piezas. Las de sub son
+  // URLs propias (/mosaico-de-pasta/2-colores/): mas navegables y mas
+  // indexables que un filtro por JS (Alek 2026-09-12).
+  return ARBOL.flatMap((c) => [
+    { params: { cat: c.slug, sub: undefined }, props: { c, sub: null } },
+    ...c.subs
+      .filter((s) => porSub(c.slug, s.slug).length)
+      .map((s) => ({ params: { cat: c.slug, sub: s.slug }, props: { c, sub: s } })),
+  ]);
 }
-const { c } = Astro.props;
+const { c, sub } = Astro.props;
 const g = grupoDe(c);
-const items = porCat(c.slug);
+// Categorias que se recorren en dos pasos: primero las subcategorias, luego
+// los modelos. Sin `sub` en la URL, la pagina es el indice de subcategorias.
+const indice = !!c.porSubs && !sub;
+const items = sub ? porSub(c.slug, sub.slug) : porCat(c.slug);
 const todasSubs = c.subs.map((s) => ({ ...s, n: porSub(c.slug, s.slug).length }));
 const subs = todasSubs.filter((s) => s.n);
 // subcategorias sin foto todavia (p. ej. Relieve > Especiales): se anuncian, no se filtran
 const subsPronto = todasSubs.filter((s) => !s.n);
 const nombreSub = Object.fromEntries(c.subs.map((s) => [s.slug, s.nombre]));
-const hayPiezas = items.length > 0;
+const hayPiezas = items.length > 0 && !indice;
 // piezas altas y angostas: se muestran completas, no recortadas al cuadro
 const ENTERAS = new Set(['cintillas', 'terminaciones']);
 
@@ -35,22 +46,42 @@ const mapa = Object.fromEntries(items.map((p) => [p.id, { sub: p.sub, colores: p
 const vecinos = ARBOL.filter((x) => x.grupo === c.grupo && x.slug !== c.slug);
 const primerSub = subs[0];
 ---
-<Base titulo={c.nombre} descripcion={`${c.nombre}: ${c.lema} ${c.specs.intro}`}>
+<Base titulo={sub ? `${sub.nombre} · ${c.nombre}` : c.nombre} descripcion={sub ? `${c.nombre} de ${sub.nombre.toLowerCase()}: ${items.length} modelos. ${c.specs.intro}` : `${c.nombre}: ${c.lema} ${c.specs.intro}`}>
   <div class="contenedor">
-    <p class="miga"><a href="/">Inicio</a> <span>·</span> <a href="/catalogo/">Catálogo</a> <span>·</span> <a href={`/catalogo/${g.slug}/`}>{g.nombre}</a> <span>·</span> {c.nombre}</p>
+    <p class="miga"><a href="/">Inicio</a> <span>·</span> <a href="/catalogo/">Catálogo</a> <span>·</span> <a href={`/catalogo/${g.slug}/`}>{g.nombre}</a> <span>·</span> {sub ? <a href={`/${c.slug}/`}>{c.nombre}</a> : c.nombre}{sub && <> <span>·</span> {sub.nombre}</>}</p>
     <header class="cab">
       <a class="ceja" href={`/catalogo/${g.slug}/`}>{c.grupo}</a>
-      <h1>{c.nombre}</h1>
-      <p class="lema">{c.lema}</p>
+      <h1>{sub ? `${c.nombre} · ${sub.nombre}` : c.nombre}</h1>
+      <p class="lema">{sub ? `${items.length} modelos de ${sub.nombre.toLowerCase()}.` : c.lema}</p>
       <p class="intro">{c.specs.intro}</p>
     </header>
   </div>
+
+  {indice && (
+    <div class="contenedor">
+      <div class="subcats">
+        {subs.map((s) => {
+          const foto = porSub(c.slug, s.slug)[0]?.foto;
+          return (
+            <a class="subcat" href={`/${c.slug}/${s.slug}/`}>
+              <div class="marco">{foto && <img src={foto} alt="" loading="lazy" width="600" height="600" />}</div>
+              <h2>{s.nombre}</h2>
+              <p>{porSub(c.slug, s.slug).length} modelos →</p>
+            </a>
+          );
+        })}
+        {subsPronto.map((s) => (
+          <div class="subcat pronto"><div class="marco"></div><h2>{s.nombre}</h2><p>En tienda</p></div>
+        ))}
+      </div>
+    </div>
+  )}
 
   {hayPiezas ? (
     <>
       <div class="contenedor">
         <div class="filtros" id="filtros">
-          {subs.length > 1 && (
+          {!sub && subs.length > 1 && (
             <div class="fila subs">
               <button class="pastilla on" type="button" data-sub-btn="">Todo <small>{items.length}</small></button>
               {subs.map((s) => <button class="pastilla" type="button" data-sub-btn={s.slug}>{s.nombre} <small>{s.n}</small></button>)}
@@ -211,6 +242,21 @@ const primerSub = subs[0];
     .resumen { margin-top: 10px; font-size: 12px; color: var(--tenue); }
     .resumen b { color: var(--cacao); font-weight: 600; }
     @media (max-width: 900px) { .filtros { top: 66px; } }
+
+    /* -------------------------------------------------------- subcategorias */
+    .subcats { display: grid; gap: 28px 20px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-bottom: 40px; }
+    .subcat { text-decoration: none; color: inherit; display: block; }
+    .subcat .marco {
+      aspect-ratio: 1; border: 1px solid var(--linea); border-radius: var(--radio);
+      background: var(--blanco); display: flex; align-items: center; justify-content: center;
+      padding: 10px; overflow: hidden; transition: border-color .2s ease;
+    }
+    .subcat .marco img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .subcat:hover .marco { border-color: var(--terracota); }
+    .subcat h2 { font-family: var(--serif); font-size: 22px; font-weight: 600; margin: 12px 2px 2px; }
+    .subcat p { margin: 0 2px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--terracota); }
+    .subcat.pronto { opacity: .5; }
+    .subcat.pronto p { color: var(--cacao); }
 
     /* ----------------------------------------------------------- galeria */
     .galeria { display: grid; gap: 30px 20px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }

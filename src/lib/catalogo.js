@@ -202,6 +202,7 @@ export const ARBOL = [
   },
   {
     slug: 'mosaico-de-pasta', nombre: 'Mosaico de pasta', grupo: 'Pisos',
+    porSubs: true,   // se navega por numero de colores, no con filtro (Alek 2026-09-12)
     portada: ['5 colores', '4 colores'],
     lema: 'Dibujos de cemento pigmentado, pieza por pieza.',
     subs: [
