@@ -169,6 +169,7 @@ CARPETAS = [
     ("muebles-de-bano", "mueble", "TALAVERA/PAQUETES DE BAÑO", "Mueble de baño"),
     ("piedra", "fachaletas", "FACHALETAS DE PIEDRA", "Fachaleta de piedra"),
     ("piedra", "mallas", "MALLAS DE PIEDRA", "Malla de piedra"),
+    ("teja", "teja", "TEJA", "Teja de barro"),
 ]
 # Carpetas de trabajo que no se publican nunca.
 NO_PUBLICAR = ("_PARA BORRAR", "_SUELTAS", "SIN LIGAR", "_ARCHIVO", "_ZIP", "SIN IDENTIFICAR")
@@ -330,6 +331,29 @@ def desde_carpetas(fotos_dir, publico):
     return out
 
 
+# Mosaico de pasta: el maestro trae UNA foto por ficha, pero la carpeta tiene
+# varias del mismo numero de colores. Se suman a la galeria (Alek 2026-09-12).
+GALERIA_DESDE_CARPETA = ("mosaico-de-pasta",)
+
+
+def completar_galeria(piezas, publico):
+    sumadas = 0
+    for f in piezas:
+        if f["cat"] not in GALERIA_DESDE_CARPETA or not f.get("foto"):
+            continue
+        carpeta = publico / Path(f["foto"].replace("/fotos/", "")).parent
+        if not carpeta.is_dir():
+            continue
+        for src in sorted(carpeta.iterdir()):
+            if src.suffix.lower() != ".webp":
+                continue
+            url = "/fotos/" + src.relative_to(publico).as_posix()
+            if url != f["foto"] and url not in f["galeria"]:
+                f["galeria"].append(url)
+                sumadas += 1
+    return sumadas
+
+
 def main():
     xlsx = Path(sys.argv[1] if len(sys.argv) > 1 else "../CATALOGO_MAESTRO.xlsx")
     fotos_dir = Path(sys.argv[2] if len(sys.argv) > 2 else "../FOTOS PRODUCTOS")
@@ -343,6 +367,9 @@ def main():
         if c["id"] not in vistos:
             piezas.append(c)
             vistos.add(c["id"])
+
+    sumadas = completar_galeria(piezas, publico)
+    print(f"galeria desde carpeta: +{sumadas} fotos")
 
     piezas.sort(key=lambda p: (p["cat"], p["sub"], p["nombre"]))
     salida.write_text(json.dumps(piezas, ensure_ascii=False, separators=(",", ":")),

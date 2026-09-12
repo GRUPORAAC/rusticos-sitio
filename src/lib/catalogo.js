@@ -252,7 +252,7 @@ export const ARBOL = [
     lema: 'Teja de barro y sus terminaciones.',
     subs: [],
     specs: {
-      intro: 'Teja de barro en varios acabados, con sus terminaciones (cumbrera, cónica, media caña). La tenemos en tienda; las fotos vienen en camino.',
+      intro: 'Teja de barro en varios acabados, con sus terminaciones (cumbrera, cónica, media caña). Formatos y acabados varían; lo confirmamos en tienda.',
       notas: [],
     },
   },
