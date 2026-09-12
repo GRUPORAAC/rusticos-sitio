@@ -250,6 +250,8 @@ export const ARBOL = [
   {
     slug: 'teja', nombre: 'Teja', grupo: 'Techos',
     lema: 'Teja de barro y sus terminaciones.',
+    // Alek 2026-09-12: primero las de pano instalado, no la pieza suelta.
+    portada: ['casa grande terracota', 'casa grande flameado santa', 'corcega terracota natural', 'renacimiento terracota natural'],
     subs: [],
     specs: {
       intro: 'Teja de barro en varios acabados, con sus terminaciones (cumbrera, cónica, media caña). Formatos y acabados varían; lo confirmamos en tienda.',

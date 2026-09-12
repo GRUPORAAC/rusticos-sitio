@@ -151,7 +151,10 @@ def clasificar(p):
     if cat == "Loseta/Baldosa":
         prod = str(p.get("producto", "")).upper()
         if "MOSAICO DE PASTA" in prod:
-            return ("mosaico-de-pasta", slug(prod.replace("MOSAICO DE PASTA", "")) or "colores")
+            # el sub es la FAMILIA (1-color, 2-colores...), no el numero de
+            # diseno: "MOSAICO DE PASTA 2 COLORES 05" -> 2-colores (2026-09-12)
+            m = re.search(r"(\d+)\s*COLOR(?:ES)?", prod)
+            return ("mosaico-de-pasta", slug(m.group(0)) if m else "colores")
         if "BARRO" in prod or "LOSETA" in prod:
             return ("barro", "loseta")
         return None
@@ -333,7 +336,9 @@ def desde_carpetas(fotos_dir, publico):
 
 # Mosaico de pasta: el maestro trae UNA foto por ficha, pero la carpeta tiene
 # varias del mismo numero de colores. Se suman a la galeria (Alek 2026-09-12).
-GALERIA_DESDE_CARPETA = ("mosaico-de-pasta",)
+# Vacio desde 2026-09-12: los 27 disenos de mosaico de pasta se dieron de alta
+# como productos propios (LSMP101-LSMP501), asi que cada ficha ya es una foto.
+GALERIA_DESDE_CARPETA = ()
 
 
 def completar_galeria(piezas, publico):
