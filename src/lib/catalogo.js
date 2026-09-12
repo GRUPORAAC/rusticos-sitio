@@ -66,7 +66,7 @@ export const ARBOL = [
   },
   {
     slug: 'talavera-decorada', nombre: 'Talavera decorada', grupo: 'Talavera',
-    portada: ['lluvia rojo'],
+    portada: ['cupula azul', 'girasol azul'],
     lema: 'Un diseño por pieza, en la carta de colores de la talavera.',
     subs: [
       { slug: 'sencillo', nombre: 'Sencillo' },
@@ -90,7 +90,7 @@ export const ARBOL = [
       { slug: 'mate', nombre: 'Mate' },
       { slug: 'especiales', nombre: 'Especiales' },
     ],
-    portada: ['rosario colores', 'cuerda', 'frida'],
+    portada: ['lluvia rojo'],
     specs: {
       intro: 'Azulejo con el diseño en relieve. Se usa en cenefas, muros de acento y fachadas.',
       notas: ['La caja trae 1 m² en todos los formatos.'],
