@@ -244,6 +244,10 @@ def desde_maestro(xlsx, publico):
             nombre = nombre_corto(p.get("producto"))
             if es_cintilla:
                 nombre += " " + bonito(p.get("formato"))
+            # Relieve Mate comparte modelo y foto con el Relieve clasico
+            # (Teresa, Iris): sin el acabado en el nombre parecen duplicados.
+            if p["cat"] == "relieve" and p["sub"] == "mate":
+                nombre += " Mate"
             if p["cat"] == "terminaciones":
                 # la pieza primero, luego acabado y color (Alek 2026-09-10)
                 pieza = p.get("pieza_forma") if p.get("tipo_pieza") == "Corniza" else p.get("tipo_pieza")
