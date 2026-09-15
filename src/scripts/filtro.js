@@ -79,6 +79,7 @@ export function montarVisor() {
   const img = visor.querySelector('img');
   const pie = visor.querySelector('.visor-pie');
   const sub = visor.querySelector('.visor-sub');
+  const ficha = visor.querySelector('.visor-ficha');
   const cerrar = visor.querySelector('.visor-cerrar');
   const prev = visor.querySelector('.visor-prev');
   const next = visor.querySelector('.visor-next');
@@ -93,6 +94,7 @@ export function montarVisor() {
       .map((src, n, todas) => ({
         el, src,
         nombre: el.dataset.nombre || '',
+        ruta: el.dataset.ruta || '',
         sub: todas.length > 1 ? `${el.dataset.sub || ''} · ${n + 1}/${todas.length}`.replace(/^ · /, '') : (el.dataset.sub || ''),
       })));
 
@@ -103,6 +105,7 @@ export function montarVisor() {
     img.alt = v.nombre;
     pie.textContent = v.nombre;
     sub.textContent = v.sub;
+    if (ficha) { ficha.href = v.ruta; ficha.hidden = !v.ruta; }
     prev.hidden = next.hidden = lista.length < 2;
   }
   function abrir(el) {

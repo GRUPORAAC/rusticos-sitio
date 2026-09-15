@@ -1,0 +1,199 @@
+---
+// Ficha por producto. Nace 2026-09-15 para destapar el techo de SEO: hasta hoy
+// 1,160 piezas vivian en 75 URLs de categoria. No vende (Rusticos no cobra en
+// linea): la conversion es WhatsApp con el modelo ya escrito en el mensaje.
+import Base from '../../../layouts/Base.astro';
+import Pieza from '../../../components/Pieza.astro';
+import Flor from '../../../components/Flor.astro';
+import {
+  piezas, ARBOL, buscarCat, grupoDe, medida, similares, slugDe, rutaDe,
+  COLORES, CONTACTO, waHref, telHref,
+} from '../../../lib/catalogo.js';
+
+export function getStaticPaths() {
+  return piezas.map((p) => ({
+    params: { cat: p.cat, sub: p.sub, pieza: slugDe(p) },
+    props: { p },
+  }));
+}
+
+const { p } = Astro.props;
+const c = buscarCat(p.cat);
+const g = grupoDe(c);
+const sub = c.subs.find((s) => s.slug === p.sub);
+const nombreSub = sub?.nombre || c.nombre;
+const fotos = [p.foto, ...(p.galeria || [])];
+// cintillas y terminaciones son altas y angostas: se ven completas
+const entera = ['cintillas', 'terminaciones'].includes(p.cat);
+const otras = similares(p);
+const desc = `${p.nombre}: ${nombreSub.toLowerCase()} de ${c.nombre.toLowerCase()}`
+  + (p.formatos.length ? ` en ${p.formatos.map((f) => String(f.formato).replace(/X/g, ' × ')).join(', ')} cm` : '')
+  + `. En existencia en Rústicos Artesanales, Coyoacán CDMX.`;
+const waTexto = `Hola, me interesa ${p.nombre} (${c.nombre}). ¿Me cotizan?`;
+
+// Ficha de producto para Google. Sin precio: Rusticos no vende en linea.
+const jsonld = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: p.nombre,
+  description: desc,
+  image: fotos.map((f) => new URL(f, Astro.site).href),
+  category: `${c.nombre} / ${nombreSub}`,
+  ...(p.colores?.length ? { color: p.colores.join(', ') } : {}),
+  brand: { '@type': 'Brand', name: CONTACTO.nombre },
+  offers: {
+    '@type': 'Offer',
+    availability: 'https://schema.org/InStock',
+    priceSpecification: { '@type': 'PriceSpecification', priceCurrency: 'MXN' },
+    seller: { '@type': 'Store', name: CONTACTO.nombre, telephone: `+52${CONTACTO.telefonos[0].replace(/\s/g, '')}` },
+  },
+};
+---
+<Base titulo={`${p.nombre} · ${c.nombre}`} descripcion={desc} imagen={p.foto}>
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonld)}></script>
+
+  <div class="contenedor">
+    <p class="miga">
+      <a href="/">Inicio</a> <span>·</span> <a href="/catalogo/">Catálogo</a> <span>·</span>
+      <a href={`/catalogo/${g.slug}/`}>{g.nombre}</a> <span>·</span>
+      <a href={`/${c.slug}/`}>{c.nombre}</a> <span>·</span>
+      <a href={`/${c.slug}/${p.sub}/`}>{nombreSub}</a> <span>·</span> {p.nombre}
+    </p>
+
+    <div class="ficha">
+      <div>
+        <div class:list={['marco', entera && 'entera']}>
+          <img id="foto" src={fotos[0]} alt={p.nombre} width="900" height="900" fetchpriority="high" />
+        </div>
+        {fotos.length > 1 && (
+          <div class:list={['tiras', entera && 'entera']}>
+            {fotos.map((f, i) => (
+              <button class={`tira ${i === 0 ? 'on' : ''}`} type="button" data-src={f} aria-label={`Foto ${i + 1} de ${p.nombre}`}>
+                <img src={f} alt="" loading="lazy" width="120" height="120" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div class="datos">
+        <a class="ceja" href={`/${c.slug}/${p.sub}/`}>{c.nombre} · {nombreSub}</a>
+        <h1>{p.nombre}</h1>
+
+        <dl class="specs">
+          {p.acabado && <><dt>Acabado</dt><dd>{p.acabado}</dd></>}
+          {p.colores?.length > 0 && (
+            <>
+              <dt>Color</dt>
+              <dd class="cols">
+                {p.colores.map((col) => (
+                  <span class="col"><i style={`background:${COLORES[col] || '#ccc'}`}></i>{col}</span>
+                ))}
+              </dd>
+            </>
+          )}
+          <dt>Categoría</dt><dd>{nombreSub}</dd>
+        </dl>
+
+        {p.formatos.length > 0 && (
+          <table class="tabla">
+            <thead><tr><th>Formato</th><th>Medida</th><th>Rendimiento</th></tr></thead>
+            <tbody>
+              {p.formatos.map((f) => (
+                <tr>
+                  <td>{String(f.formato).replace(/X/g, ' × ')}</td>
+                  <td>{f.medida || medida(f.formato)}</td>
+                  <td>{f.pz_m2 ? `${f.pz_m2} pzas / m²` : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <div class="botones">
+          <a class="boton" href={waHref(waTexto)} target="_blank" rel="noopener">Cotizar por WhatsApp</a>
+          <a class="boton hueco" href={telHref(CONTACTO.telefonos[0])}>Tel. {CONTACTO.telefonos[0]}</a>
+        </div>
+        <p class="donde">En existencia en tienda · {CONTACTO.direccionCorta}. <a href="/contacto/">Cómo llegar →</a></p>
+
+        {c.specs.notas.length > 0 && (
+          <ul class="notas">
+            {c.specs.notas.map((n) => <li><Flor tam={10} /> <span>{n}</span></li>)}
+          </ul>
+        )}
+        <p class="aviso">Producto artesanal: variaciones de color y medida de hasta 5% entre piezas. Considera una merma de hasta 5% por traslados y cortes.</p>
+      </div>
+    </div>
+  </div>
+
+  {otras.length > 0 && (
+    <section class="contenedor otras">
+      <p class="ceja">Más de {nombreSub.toLowerCase()}</p>
+      <div class="galeria">
+        {otras.map((x) => <Pieza p={x} sub={nombreSub} entera={entera} />)}
+      </div>
+      <a class="liga-mas" href={`/${c.slug}/${p.sub}/`}>Ver toda la subcategoría →</a>
+    </section>
+  )}
+
+  <script>
+    // Cambiar de toma. Sin libreria: es intercambiar un src.
+    const foto = document.getElementById('foto');
+    document.querySelectorAll('.tira').forEach((b) =>
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.tira').forEach((x) => x.classList.remove('on'));
+        b.classList.add('on');
+        foto.src = b.dataset.src;
+      })
+    );
+  </script>
+
+  <style>
+    .miga { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); padding: 26px 0 0; }
+    .miga span { margin: 0 6px; color: var(--arena); }
+    .miga a:hover { color: var(--terracota); }
+
+    .ficha { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; padding: 30px 0 60px; }
+    @media (max-width: 900px) { .ficha { grid-template-columns: 1fr; gap: 28px; } }
+
+    .marco {
+      aspect-ratio: 1; background: var(--blanco); border: 1px solid var(--linea);
+      border-radius: var(--radio); padding: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .marco img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
+    .tiras { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .tira {
+      width: 72px; height: 72px; padding: 4px; cursor: pointer;
+      background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio);
+    }
+    .tira.on { border-color: var(--terracota); }
+    .tira img { width: 100%; height: 100%; object-fit: contain; }
+
+    .datos h1 { font-family: var(--serif); font-size: clamp(30px, 4vw, 44px); font-weight: 600; margin: 10px 0 22px; line-height: 1.1; }
+
+    .specs { display: grid; grid-template-columns: auto 1fr; gap: 8px 22px; margin: 0 0 26px; font-size: 14px; }
+    .specs dt { color: var(--tenue); }
+    .specs dd { margin: 0; }
+    .cols { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+    .col { display: inline-flex; align-items: center; gap: 6px; }
+    .col i { width: 13px; height: 13px; border-radius: 50%; border: 1px solid rgba(0,0,0,.14); }
+
+    .tabla { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 28px; }
+    .tabla th, .tabla td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--linea); }
+    .tabla th { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--tenue); font-weight: 600; }
+    .tabla tr:last-child td { border-bottom: 0; }
+
+    .botones { display: flex; flex-wrap: wrap; gap: 10px; }
+    .donde { font-size: 13px; color: var(--tenue); margin: 14px 0 24px; }
+    .donde a { color: var(--terracota); }
+
+    .notas { list-style: none; padding: 0; margin: 0 0 18px; font-size: 13px; color: var(--tenue); }
+    .notas li { display: flex; gap: 9px; align-items: flex-start; margin-bottom: 7px; line-height: 1.5; }
+    .aviso { font-size: 12px; color: var(--tenue); border-left: 2px solid var(--terracota); padding-left: 14px; margin: 0; }
+
+    .otras { padding-bottom: 70px; }
+    .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 24px 16px; margin-top: 20px; }
+    .liga-mas { display: inline-block; margin-top: 26px; font-size: 13px; color: var(--terracota); }
+  </style>
+</Base>

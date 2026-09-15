@@ -299,6 +299,23 @@ export const porCat = (cat) => piezas.filter((p) => p.cat === cat);
 export const porSub = (cat, sub) => piezas.filter((p) => p.cat === cat && p.sub === sub);
 export const buscarCat = (slug) => ARBOL.find((c) => c.slug === slug);
 
+/** URL de la ficha: /categoria/subcategoria/slug/. El id ya trae el prefijo de
+ *  su familia (loseta-artesanal, teja-cumbrera-...); se recorta para no
+ *  repetirlo en la URL. Verificado: no genera colisiones en las 1,160 piezas. */
+export const slugDe = (p) =>
+  p.id.startsWith(p.sub + '-') && p.id.length > p.sub.length + 1 ? p.id.slice(p.sub.length + 1) : p.id;
+export const rutaDe = (p) => `/${p.cat}/${p.sub}/${slugDe(p)}/`;
+
+/** Otras piezas de la misma subcategoria; primero las que comparten color. */
+export function similares(p, n = 12) {
+  const col = new Set(p.colores || []);
+  const comparte = (x) => (x.colores || []).some((c) => col.has(c));
+  return porSub(p.cat, p.sub)
+    .filter((x) => x.id !== p.id)
+    .sort((a, b) => comparte(b) - comparte(a))
+    .slice(0, n);
+}
+
 /** La medida nominal no es la real: el 10X10 de talavera mide 10.8. */
 const MEDIDA_REAL = { '10X10': '10.8 × 10.8 cm' };
 export const medida = (f) => {

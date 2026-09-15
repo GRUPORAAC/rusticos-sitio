@@ -5,6 +5,7 @@ const {
   titulo,
   descripcion = 'Talavera, barro, piedra, cantera y teja. Acabados artesanales para tu proyecto, en tienda física en Coyoacán, CDMX.',
   claseBody = '',
+  imagen = '/og.png',   // la ficha manda la foto del producto
 } = Astro.props;
 const anio = new Date().getFullYear();
 const grupos = GRUPOS_DEF.map((g) => ({ ...g, cats: porGrupo(g.nombre).map((c) => ({ ...c, n: porCat(c.slug).length })) }));
@@ -20,9 +21,13 @@ const ruta = Astro.url.pathname;
     <meta property="og:title" content={titulo || CONTACTO.nombre} />
     <meta property="og:description" content={descripcion} />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content={new URL('/og.png', Astro.site).href} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:image" content={new URL(imagen, Astro.site).href} />
+    {imagen === '/og.png' && (
+      <>
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+      </>
+    )}
     <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site).href} />
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site).href} />
     <meta property="og:locale" content="es_MX" />
@@ -96,6 +101,7 @@ const ruta = Astro.url.pathname;
       <div class="visor-txt">
         <p class="visor-pie"></p>
         <p class="visor-sub"></p>
+        <a class="visor-ficha" href="">Ver ficha &rarr;</a>
       </div>
     </div>
 
@@ -260,6 +266,12 @@ const ruta = Astro.url.pathname;
       .visor-txt { grid-row: 2; text-align: center; padding: 0 20px 34px; color: var(--marfil); }
       .visor-pie { font-family: var(--serif); font-size: 26px; font-weight: 600; }
       .visor-sub { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--arena); margin-top: 4px; }
+      .visor-ficha {
+        display: inline-block; margin-top: 14px; padding: 9px 20px;
+        border: 1px solid var(--arena); border-radius: 999px;
+        font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--marfil);
+      }
+      .visor-ficha:hover { background: var(--marfil); color: var(--cacao); }
       .visor button {
         position: absolute; border: 0; background: rgba(250,246,239,.1); color: var(--marfil);
         width: 48px; height: 48px; border-radius: 50%; font-size: 30px; line-height: 1; cursor: pointer;

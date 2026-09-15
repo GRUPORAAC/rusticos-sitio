@@ -2,9 +2,10 @@
 // Una pieza de la galeria: foto + nombre. Sin precio, sin codigo, sin pagina
 // propia (brief 2026-09-10). El clic la amplia en el visor de Base.astro.
 const { p, sub = '', entera = false, prioridad = false } = Astro.props;
+import { rutaDe } from '../lib/catalogo.js';
 const fotos = [p.foto, ...(p.galeria || [])].join('|');
 ---
-<div class:list={['pieza', entera && 'entera']} data-id={p.id} data-nombre={p.nombre} data-sub={sub} data-fotos={fotos} tabindex="0" role="button" aria-label={`Ampliar ${p.nombre}`}>
+<div class:list={['pieza', entera && 'entera']} data-id={p.id} data-nombre={p.nombre} data-sub={sub} data-fotos={fotos} data-ruta={rutaDe(p)} tabindex="0" role="button" aria-label={`Ampliar ${p.nombre}`}>
   <div class="pieza-foto">
     <img src={p.foto} alt={p.nombre} loading={prioridad ? 'eager' : 'lazy'} decoding="async" width="600" height="600" />
   </div>
