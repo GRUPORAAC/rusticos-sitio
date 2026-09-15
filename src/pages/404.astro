@@ -1,0 +1,24 @@
+---
+import Base from '../layouts/Base.astro';
+import { waHref } from '../lib/catalogo.js';
+---
+<Base titulo="Página no encontrada">
+  <div class="contenedor">
+    <header class="cab">
+      <p class="ceja centro der">Error 404</p>
+      <h1>Esa página no existe.</h1>
+      <p class="intro">Puede que la liga esté mal escrita o que la pieza ya no esté en la galería.</p>
+      <div class="acciones">
+        <a class="boton" href="/catalogo/">Ver el catálogo</a>
+        <a class="boton hueco" href="/contacto/">Contacto y tienda</a>
+        <a class="boton hueco" href={waHref('Hola, busco una pieza que vi en el sitio.')} target="_blank" rel="noopener">WhatsApp</a>
+      </div>
+    </header>
+  </div>
+  <style>
+    .cab { text-align: center; padding: 80px 0 60px; max-width: 640px; margin: 0 auto; }
+    .cab h1 { margin-top: 16px; }
+    .intro { margin-top: 14px; color: var(--tenue); font-size: 16px; }
+    .acciones { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 28px; }
+  </style>
+</Base>
