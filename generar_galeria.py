@@ -178,6 +178,7 @@ CARPETAS = [
     ("muebles-de-bano", "mueble", "TALAVERA/PAQUETES DE BAÑO", "Mueble de baño"),
     ("piedra", "fachaletas", "FACHALETAS DE PIEDRA", "Fachaleta de piedra"),
     ("piedra", "mallas", "MALLAS DE PIEDRA", "Malla de piedra"),
+    ("piedra", "cantera", "CANTERA", "Cantera"),
     ("teja", "teja", "TEJA", "Teja de barro"),
 ]
 # Carpetas de trabajo que no se publican nunca.
