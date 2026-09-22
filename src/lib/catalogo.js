@@ -234,18 +234,20 @@ export const ARBOL = [
   {
     slug: 'cantera', nombre: 'Cantera', grupo: 'Piedra y cantera',
     lema: 'Laminados, cintillas y piezas de cantera.',
+    portada: ['blanca pachuca', 'rosa mexicana', 'gris remedios', 'tikul'],
     subs: [],
     specs: {
-      intro: 'Cantera en laminado, cintilla y piezas especiales. La tenemos en tienda; las fotos vienen en camino.',
+      intro: 'Cantera en laminado, cintilla y piezas especiales, en sus tonos de banco: blancas (Pachuca, Esperanza, Mexicana, Galarza), rosa y naranja mexicana, gris Remedios, America negra, conchuela y Tikul.',
       notas: [],
     },
   },
   {
     slug: 'recinto', nombre: 'Recinto', grupo: 'Piedra y cantera',
     lema: 'Piedra volcánica para pisos y muros.',
+    portada: ['recinto negro', 'recinto xaltocan'],
     subs: [],
     specs: {
-      intro: 'Recinto en loseta y pepita. Lo tenemos en tienda; las fotos vienen en camino.',
+      intro: 'Recinto en loseta y pepita, en negro y Xaltocan.',
       notas: [],
     },
   },
