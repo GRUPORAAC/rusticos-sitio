@@ -326,7 +326,7 @@ export const medida = (f) => {
   if (s === 'UNICO') return 'Pieza única';
   if (s === 'PZA') return 'Pieza';
   return s.replace(/^(\d+(?:\.\d+)?)X(\d+(?:\.\d+)?)$/, '$1 × $2 cm')
-          .replace(/^(\d+) CM$/, '$1 cm de ancho');
+          .replace(/^(\d+) CM$/, '$1 cm de largo');
 };
 
 /** Tabla de formatos de una categoria: por subcategoria, los formatos que
