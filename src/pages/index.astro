@@ -56,12 +56,14 @@ const NOS = escoge('talavera-decorada', ['collage azul']);
   <!-- Franja de campana: vive solo del 13 al 17 de noviembre de 2026. Para
        bajarla, borrar esta seccion y su bloque de estilo. -->
   <a class="bf-franja" href="/buen-fin/">
-    <img src="/buen-fin/calendario.png" alt="" width="885" height="877" />
-    <span class="bf-franja-txt">
-      <b>Buen Fin en la tienda</b>
-      <span>Del 13 al 17 de noviembre, hasta 35% de descuento.</span>
+    <span class="bf-franja-izq">
+      <span class="bf-franja-txt">
+        <b>Buen Fin en la tienda</b>
+        <span>Del 13 al 17 de noviembre, hasta 35% de descuento.</span>
+      </span>
+      <span class="bf-franja-cta">Ver las promociones →</span>
     </span>
-    <span class="bf-franja-cta">Ver las promociones →</span>
+    <img src="/buen-fin/calendario.png" alt="" width="885" height="877" />
   </a>
 
   <!-- ================================================================ HERO -->
@@ -562,23 +564,33 @@ const NOS = escoge('talavera-decorada', ['collage azul']);
   
   /* ---------------------------------------------------------- Buen Fin */
   .bf-franja {
-    display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap;
+    display: flex; align-items: center; justify-content: center; gap: 44px; flex-wrap: wrap;
     background: var(--cacao); color: var(--marfil);
-    padding: 14px 28px; text-align: center;
+    padding: 16px 40px; text-align: left;
   }
-  .bf-franja img { height: 52px; width: auto; }
-  .bf-franja-txt { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.3; }
-  .bf-franja-txt b { font-family: var(--serif); font-size: 24px; font-weight: 600; }
-  .bf-franja-txt span { font-size: 13.5px; color: var(--arena); }
+  /* El logo da una vuelta cada 7s y el resto del tiempo se queda quieto: llama
+     la atencion sin marear. Gira en su propio eje (rotateY), no se deforma ni
+     se recorta, que es lo que pide el manual del Buen Fin. */
+  .bf-franja img { height: 200px; width: auto; animation: bf-giro 7s ease-in-out infinite; transform-style: preserve-3d; }
+  @keyframes bf-giro {
+    0%, 62% { transform: perspective(600px) rotateY(0); }
+    100% { transform: perspective(600px) rotateY(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) { .bf-franja img { animation: none; } }
+  .bf-franja-izq { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+  .bf-franja-txt { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
+  .bf-franja-txt b { font-family: var(--serif); font-size: clamp(34px, 4.4vw, 56px); font-weight: 600; }
+  .bf-franja-txt span { font-size: clamp(15px, 1.5vw, 19px); color: var(--arena); margin-top: 6px; }
   .bf-franja-cta {
-    padding: 10px 20px; border: 1px solid rgba(250,246,239,.6); border-radius: var(--radio);
-    font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+    padding: 18px 34px; border: 1px solid rgba(250,246,239,.6); border-radius: var(--radio);
+    font-size: 14px; letter-spacing: .1em; text-transform: uppercase;
     transition: background .2s ease, color .2s ease;
   }
   .bf-franja:hover .bf-franja-cta { background: var(--marfil); color: var(--cacao); }
-  @media (max-width: 640px) {
-    .bf-franja { gap: 12px; padding: 12px 16px; }
-    .bf-franja img { height: 40px; }
+  @media (max-width: 900px) {
+    .bf-franja { gap: 22px; padding: 16px 20px; justify-content: center; text-align: center; }
+    .bf-franja img { height: 130px; }
+    .bf-franja-izq { align-items: center; gap: 16px; }
     .bf-franja-txt { align-items: center; }
   }
 </style>
