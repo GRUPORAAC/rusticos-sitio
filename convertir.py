@@ -26,7 +26,9 @@ for pat in patrones:
     archivos.update(glob.glob(base + "/**/" + pat, recursive=True))
 for src in sorted(archivos):
     rel = os.path.relpath(src, raiz).replace("\\", "/")
-    if any(p in rel.upper() for p in ("_PARA BORRAR", "_SUELTAS", "SIN LIGAR", "_ARCHIVO", "_ZIP", "HERO BT")):
+    if any(p in rel.upper() for p in ("_PARA BORRAR", "_SUELTAS", "SIN LIGAR", "_ARCHIVO", "_ZIP", "HERO BT",
+              # no van al sitio: accesorios son extra de mostrador y lo demas son carpetas de trabajo
+              "/ACCESORIOS/", "ESPECIALES BUEN FIN", "BUEN FIN/", "_EXISTENCIAS", "_RECORTES", "WHSP FEDE")):
         continue
     dst = normaliza_ruta_foto(rel)[len("FOTOS PRODUCTOS/"):]
     out = os.path.join("public", "fotos", dst)
